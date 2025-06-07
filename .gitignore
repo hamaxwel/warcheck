@@ -1,0 +1,67 @@
+# Build directories
+build/
+bin/
+lib/
+out/
+Debug/
+Release/
+x64/
+x86/
+
+# IDE files
+.vs/
+.vscode/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+.idea/
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.opendb
+
+# Compiled files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.pdb
+*.ilk
+*.exp
+*.manifest
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+*.cmake
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+Content/Models/*
+Content/Textures/*
+Content/Shaders/*
+Content/Audio/*
+!Content/Models/.gitkeep
+!Content/Textures/.gitkeep
+!Content/Shaders/.gitkeep
+!Content/Audio/.gitkeep 

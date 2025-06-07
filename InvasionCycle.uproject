@@ -1,0 +1,58 @@
+{
+    "FileVersion": 3,
+    "EngineAssociation": "5.3",
+    "Category": "",
+    "Description": "",
+    "Modules": [
+        {
+            "Name": "InvasionCycle",
+            "Type": "Runtime",
+            "LoadingPhase": "Default",
+            "AdditionalDependencies": [
+                "Engine",
+                "AIModule",
+                "UMG",
+                "Slate",
+                "SlateCore",
+                "InputCore",
+                "HeadMountedDisplay",
+                "NavigationSystem",
+                "GameplayTasks"
+            ]
+        },
+        {
+            "Name": "InvasionCycleEditor",
+            "Type": "Editor",
+            "LoadingPhase": "PostEngineInit",
+            "AdditionalDependencies": [
+                "Engine",
+                "UnrealEd"
+            ]
+        }
+    ],
+    "Plugins": [
+        {
+            "Name": "ModelingToolsEditorMode",
+            "Enabled": true,
+            "TargetAllowList": [
+                "Editor"
+            ]
+        },
+        {
+            "Name": "GeometryMode",
+            "Enabled": true
+        },
+        {
+            "Name": "AnimationSharing",
+            "Enabled": true
+        },
+        {
+            "Name": "EnhancedInput",
+            "Enabled": true
+        }
+    ],
+    "TargetPlatforms": [
+        "Windows"
+    ],
+    "EpicSampleNameHash": 0
+} 

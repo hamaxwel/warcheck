@@ -1,0 +1,49 @@
+{
+    "AssetType": "Blueprint",
+    "Class": "UserWidget",
+    "Name": "WBP_TacticalWidget",
+    "Properties": {
+        "SquadInfoPanel": {
+            "Type": "VerticalBox",
+            "Properties": {
+                "Slot": {
+                    "Padding": {
+                        "Left": 10,
+                        "Top": 10,
+                        "Right": 10,
+                        "Bottom": 10
+                    }
+                }
+            }
+        },
+        "FormationText": {
+            "Type": "TextBlock",
+            "Properties": {
+                "Text": "Formation: Line",
+                "Font": {
+                    "Size": 20,
+                    "Typeface": "Roboto"
+                },
+                "Color": {
+                    "R": 1.0,
+                    "G": 1.0,
+                    "B": 1.0,
+                    "A": 1.0
+                }
+            }
+        },
+        "SquadMembersList": {
+            "Type": "VerticalBox",
+            "Properties": {
+                "Slot": {
+                    "Padding": {
+                        "Left": 0,
+                        "Top": 10,
+                        "Right": 0,
+                        "Bottom": 0
+                    }
+                }
+            }
+        }
+    }
+} 

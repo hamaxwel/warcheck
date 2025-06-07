@@ -1,0 +1,79 @@
+{
+    "AssetType": "Blueprint",
+    "Class": "UserWidget",
+    "Name": "WBP_SquadJoinPrompt",
+    "Properties": {
+        "PromptPanel": {
+            "Type": "VerticalBox",
+            "Properties": {
+                "Slot": {
+                    "Padding": {
+                        "Left": 20,
+                        "Top": 20,
+                        "Right": 20,
+                        "Bottom": 20
+                    }
+                }
+            }
+        },
+        "PromptText": {
+            "Type": "TextBlock",
+            "Properties": {
+                "Text": "Join Squad?",
+                "Font": {
+                    "Size": 24,
+                    "Typeface": "Roboto"
+                },
+                "Color": {
+                    "R": 1.0,
+                    "G": 1.0,
+                    "B": 1.0,
+                    "A": 1.0
+                }
+            }
+        },
+        "SquadLeaderName": {
+            "Type": "TextBlock",
+            "Properties": {
+                "Text": "Squad Leader: ",
+                "Font": {
+                    "Size": 18,
+                    "Typeface": "Roboto"
+                },
+                "Color": {
+                    "R": 0.8,
+                    "G": 0.8,
+                    "B": 0.8,
+                    "A": 1.0
+                }
+            }
+        },
+        "ButtonPanel": {
+            "Type": "HorizontalBox",
+            "Properties": {
+                "Slot": {
+                    "Padding": {
+                        "Left": 0,
+                        "Top": 20,
+                        "Right": 0,
+                        "Bottom": 0
+                    }
+                }
+            }
+        },
+        "AcceptButton": {
+            "Type": "Button",
+            "Properties": {
+                "Text": "Accept",
+                "OnClicked": "OnAcceptClicked"
+            }
+        },
+        "DeclineButton": {
+            "Type": "Button",
+            "Properties": {
+                "Text": "Decline",
+                "OnClicked": "OnDeclineClicked"
+            }
+        }
+    }
+} 

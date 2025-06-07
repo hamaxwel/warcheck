@@ -1,0 +1,66 @@
+Manual Setup Guide for InvasionEngine
+====================================
+
+1. Create the following folder structure:
+   C:\dev\mygame\dependencies
+   C:\dev\mygame\dependencies\bin
+   C:\dev\mygame\dependencies\lib
+   C:\dev\mygame\dependencies\include
+
+2. Download and extract GLEW:
+   - Go to: https://sourceforge.net/projects/glew/files/glew/2.2.0/glew-2.2.0-win32.zip/download
+   - Extract the ZIP file
+   - Copy these files:
+     * From: glew-2.2.0\bin\Release\x64\glew32.dll
+       To: dependencies\bin\glew32.dll
+     * From: glew-2.2.0\lib\Release\x64\glew32.lib
+       To: dependencies\lib\glew32.lib
+     * From: glew-2.2.0\include\GL\*
+       To: dependencies\include\GL\
+
+3. Download and extract OpenAL:
+   - Go to: https://www.openal-soft.org/openal-binaries/openal-soft-1.22.2-bin.zip
+   - Extract the ZIP file
+   - Copy these files:
+     * From: openal-soft-1.22.2-bin\bin\Win64\OpenAL32.dll
+       To: dependencies\bin\OpenAL32.dll
+     * From: openal-soft-1.22.2-bin\libs\Win64\OpenAL32.lib
+       To: dependencies\lib\OpenAL32.lib
+     * From: openal-soft-1.22.2-bin\include\AL\*
+       To: dependencies\include\AL\
+
+4. Download and extract Assimp:
+   - Go to: https://sourceforge.net/projects/assimp/files/assimp-5.2.4/assimp-5.2.4-windows-vs142-x64.zip/download
+   - Extract the ZIP file
+   - Copy these files:
+     * From: assimp-5.2.4-windows-vs142-x64\bin\assimp-vc142-mt.dll
+       To: dependencies\bin\assimp-vc142-mt.dll
+     * From: assimp-5.2.4-windows-vs142-x64\lib\assimp-vc142-mt.lib
+       To: dependencies\lib\assimp-vc142-mt.lib
+     * From: assimp-5.2.4-windows-vs142-x64\include\assimp\*
+       To: dependencies\include\assimp\
+
+5. After copying all files, verify the structure:
+   dependencies\
+   ├── bin\
+   │   ├── glew32.dll
+   │   ├── OpenAL32.dll
+   │   └── assimp-vc142-mt.dll
+   ├── lib\
+   │   ├── glew32.lib
+   │   ├── OpenAL32.lib
+   │   └── assimp-vc142-mt.lib
+   └── include\
+       ├── GL\
+       │   ├── glew.h
+       │   └── ...
+       ├── AL\
+       │   ├── al.h
+       │   └── ...
+       └── assimp\
+           ├── aiScene.h
+           └── ...
+
+6. Once all files are in place, run build.bat to build the project.
+
+Note: If you have any issues with the downloads, try using a different browser or download manager. 
