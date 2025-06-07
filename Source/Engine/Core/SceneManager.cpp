@@ -1,4 +1,5 @@
 #include "SceneManager.h"
+#include "Scene.h"
 #include "Entity.h"
 #include "Mesh.h"
 #include "CameraComponent.h"
@@ -14,13 +15,16 @@
 
 namespace InvasionEngine {
 
-SceneManager::SceneManager() {}
+SceneManager::SceneManager() : m_ActiveScene(nullptr) {}
 SceneManager::~SceneManager() {}
 
 void SceneManager::Initialize() {
+    // Create default scene
+    m_ActiveScene = CreateScene("DefaultScene");
+    m_ActiveScene->Initialize();
+
     // Create ground plane
-    Entity* ground = new Entity();
-    ground->SetName("Ground");
+    auto ground = m_ActiveScene->CreateEntity("Ground");
     ground->SetPosition(Vector3(0.0f, -1.0f, 0.0f));
     Mesh* groundMesh = new Mesh();
     groundMesh->SetVertices({
@@ -32,11 +36,9 @@ void SceneManager::Initialize() {
     groundMesh->SetIndices({0, 1, 2, 2, 3, 0});
     groundMesh->UploadToGPU();
     ground->AddComponent(std::shared_ptr<Component>(groundMesh));
-    m_Entities.push_back(std::shared_ptr<Entity>(ground));
 
     // Create player (human)
-    HumanCharacter* player = new HumanCharacter();
-    player->SetName("Player");
+    auto player = m_ActiveScene->CreateEntity("Player");
     player->SetPosition(Vector3(0.0f, 0.0f, 0.0f));
     CameraComponent* camera = new CameraComponent();
     camera->SetPerspective(60.0f, 1.777f, 0.1f, 1000.0f);
@@ -45,12 +47,10 @@ void SceneManager::Initialize() {
     player->AddComponent(std::shared_ptr<Component>(controller));
     WeaponComponent* weapon = new WeaponComponent();
     player->AddComponent(std::shared_ptr<Component>(weapon));
-    m_Entities.push_back(std::shared_ptr<Entity>(player));
 
     // Create several aliens
     for (int i = 0; i < 5; ++i) {
-        AlienCharacter* alien = new AlienCharacter();
-        alien->SetName("Alien" + std::to_string(i+1));
+        auto alien = m_ActiveScene->CreateEntity("Alien" + std::to_string(i+1));
         alien->SetPosition(Vector3(-4.0f + i * 2.0f, 0.0f, 5.0f));
         AlienAIComponent* ai = new AlienAIComponent();
         ai->SetPatrolPoints({
@@ -60,76 +60,72 @@ void SceneManager::Initialize() {
             Vector3(-2.0f + i * 2.0f, 0.0f, 5.0f)
         });
         alien->AddComponent(std::shared_ptr<Component>(ai));
-        m_Entities.push_back(std::shared_ptr<Entity>(alien));
     }
 }
 
 void SceneManager::Shutdown() {
-    m_Entities.clear();
+    for (auto scene : m_Scenes) {
+        scene->Shutdown();
+        delete scene;
+    }
+    m_Scenes.clear();
+    m_ActiveScene = nullptr;
 }
 
 void SceneManager::Update(float deltaTime) {
-    // Remove dead aliens
-    m_Entities.erase(
-        std::remove_if(m_Entities.begin(), m_Entities.end(), [](const std::shared_ptr<Entity>& entity) {
-            if (auto* alien = dynamic_cast<AlienCharacter*>(entity.get())) {
-                return alien->IsDead();
-            }
-            return false;
-        }),
-        m_Entities.end()
-    );
-
-    // Update alien hit flash
-    for (auto& entity : m_Entities) {
-        if (auto* alien = dynamic_cast<AlienCharacter*>(entity.get())) {
-            alien->UpdateFlash(deltaTime);
-        }
+    if (m_ActiveScene) {
+        m_ActiveScene->Update(deltaTime);
     }
+}
 
-    // Check for player death
-    bool playerDead = false;
-    int alienCount = 0;
-    float playerHealth = 0.0f;
-    int playerAmmo = 0;
-    for (auto& entity : m_Entities) {
-        if (auto* player = dynamic_cast<HumanCharacter*>(entity.get())) {
-            playerHealth = player->GetHealth();
-            if (player->IsDead()) playerDead = true;
-            // Find weapon for ammo
-            for (auto& comp : player->GetComponents()) {
-                if (auto* weapon = dynamic_cast<WeaponComponent*>(comp.get())) {
-                    playerAmmo = weapon->GetAmmo();
-                }
-            }
-        }
-        if (dynamic_cast<AlienCharacter*>(entity.get())) {
-            ++alienCount;
-        }
+void SceneManager::FixedUpdate(float fixedDeltaTime) {
+    if (m_ActiveScene) {
+        m_ActiveScene->FixedUpdate(fixedDeltaTime);
     }
-    UIManager::GetInstance().SetPlayerHealth(playerHealth);
-    UIManager::GetInstance().SetPlayerAmmo(playerAmmo);
-    if (playerDead) {
-        UIManager::GetInstance().ShowMessage("Game Over! You were killed by the aliens.");
-    } else if (alienCount == 0) {
-        UIManager::GetInstance().ShowMessage("Victory! All aliens eliminated.");
-    } else {
-        UIManager::GetInstance().ClearMessage();
-    }
+}
 
-    for (auto& entity : m_Entities) {
-        for (auto& component : entity->GetComponents()) {
-            component->Update(deltaTime);
-        }
+void SceneManager::LateUpdate(float deltaTime) {
+    if (m_ActiveScene) {
+        m_ActiveScene->LateUpdate(deltaTime);
     }
-
-    // Render UI
-    UIManager::GetInstance().Render();
 }
 
 void SceneManager::Reset() {
     Shutdown();
     Initialize();
+}
+
+Scene* SceneManager::CreateScene(const std::string& name) {
+    Scene* scene = new Scene(name);
+    m_Scenes.push_back(scene);
+    return scene;
+}
+
+void SceneManager::DestroyScene(Scene* scene) {
+    auto it = std::find(m_Scenes.begin(), m_Scenes.end(), scene);
+    if (it != m_Scenes.end()) {
+        if (m_ActiveScene == scene) {
+            m_ActiveScene = nullptr;
+        }
+        scene->Shutdown();
+        delete scene;
+        m_Scenes.erase(it);
+    }
+}
+
+Scene* SceneManager::GetScene(const std::string& name) {
+    for (auto scene : m_Scenes) {
+        if (scene->GetName() == name) {
+            return scene;
+        }
+    }
+    return nullptr;
+}
+
+void SceneManager::SetActiveScene(Scene* scene) {
+    if (scene && std::find(m_Scenes.begin(), m_Scenes.end(), scene) != m_Scenes.end()) {
+        m_ActiveScene = scene;
+    }
 }
 
 } // namespace InvasionEngine 

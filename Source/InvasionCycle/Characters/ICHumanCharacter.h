@@ -1,17 +1,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Characters/ICBaseCharacter.h"
+// #include "GameFramework/Character.h"
+#include "BaseCharacter.h"
 #include "ICHumanCharacter.generated.h"
 
 UCLASS()
-class INVASIONCYCLE_API AICHumanCharacter : public AICBaseCharacter
+class INVASIONCYCLE_API ICHumanCharacter : public BaseCharacter
 {
     GENERATED_BODY()
 
 public:
-    AICHumanCharacter();
-
+    ICHumanCharacter();
+    virtual ~ICHumanCharacter() override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -51,6 +52,8 @@ public:
     virtual void OnHealthChanged() override;
 
 protected:
+    virtual void BeginDestroy() override;
+
     // Shield management
     bool bIsShieldActive;
     float ShieldRechargeTimer;

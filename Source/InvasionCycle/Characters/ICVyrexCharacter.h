@@ -1,17 +1,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Characters/ICBaseCharacter.h"
+// #include "GameFramework/Character.h"
+#include "BaseCharacter.h"
 #include "ICVyrexCharacter.generated.h"
 
 UCLASS()
-class INVASIONCYCLE_API AICVyrexCharacter : public AICBaseCharacter
+class INVASIONCYCLE_API ICVyrexCharacter : public BaseCharacter
 {
     GENERATED_BODY()
 
 public:
-    AICVyrexCharacter();
-
+    ICVyrexCharacter();
+    virtual ~ICVyrexCharacter() override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -69,4 +70,6 @@ protected:
     // Helper functions
     void UpdateBiomass(float DeltaTime);
     void RegenerateBiomass();
+
+    virtual void BeginDestroy() override;
 }; 

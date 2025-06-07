@@ -5,8 +5,13 @@
 
 namespace InvasionEngine {
 
+struct Quaternion;  // Forward declaration
+
 struct Matrix4x4 {
-    std::array<float, 16> elements;
+    union {
+        std::array<float, 16> elements;
+        float m[4][4];
+    };
 
     Matrix4x4() {
         elements.fill(0.0f);
@@ -94,6 +99,8 @@ struct Matrix4x4 {
 
         return result;
     }
+
+    static Matrix4x4 FromQuaternion(const Quaternion& q);
 
     Matrix4x4 operator*(const Matrix4x4& other) const {
         Matrix4x4 result;

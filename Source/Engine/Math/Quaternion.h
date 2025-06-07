@@ -23,6 +23,10 @@ struct Quaternion {
         );
     }
 
+    static Quaternion FromEulerAngles(float pitch, float yaw, float roll) {
+        return FromEuler(pitch, yaw, roll);
+    }
+
     static Quaternion FromEuler(float pitch, float yaw, float roll) {
         float cy = std::cos(yaw * 0.5f);
         float sy = std::sin(yaw * 0.5f);
@@ -31,12 +35,12 @@ struct Quaternion {
         float cr = std::cos(roll * 0.5f);
         float sr = std::sin(roll * 0.5f);
 
-        return Quaternion(
-            cy * cp * sr - sy * sp * cr,
-            sy * cp * sr + cy * sp * cr,
-            sy * cp * cr - cy * sp * sr,
-            cy * cp * cr + sy * sp * sr
-        );
+        Quaternion q;
+        q.w = cy * cp * cr + sy * sp * sr;
+        q.x = cy * cp * sr - sy * sp * cr;
+        q.y = sy * cp * sr + cy * sp * cr;
+        q.z = sy * cp * cr - cy * sp * sr;
+        return q;
     }
 
     Quaternion operator*(const Quaternion& other) const {
@@ -46,6 +50,11 @@ struct Quaternion {
             w * other.z + x * other.y - y * other.x + z * other.w,
             w * other.w - x * other.x - y * other.y - z * other.z
         );
+    }
+
+    Quaternion& operator*=(const Quaternion& other) {
+        *this = *this * other;
+        return *this;
     }
 
     Quaternion operator*(float scalar) const {
@@ -59,10 +68,11 @@ struct Quaternion {
     void Normalize() {
         float len = Length();
         if (len > 0.0f) {
-            x /= len;
-            y /= len;
-            z /= len;
-            w /= len;
+            float invLen = 1.0f / len;
+            x *= invLen;
+            y *= invLen;
+            z *= invLen;
+            w *= invLen;
         }
     }
 
@@ -71,28 +81,7 @@ struct Quaternion {
     }
 
     Matrix4x4 ToMatrix() const {
-        Matrix4x4 result;
-        float xx = x * x;
-        float xy = x * y;
-        float xz = x * z;
-        float xw = x * w;
-        float yy = y * y;
-        float yz = y * z;
-        float yw = y * w;
-        float zz = z * z;
-        float zw = z * w;
-
-        result.elements[0] = 1.0f - 2.0f * (yy + zz);
-        result.elements[1] = 2.0f * (xy - zw);
-        result.elements[2] = 2.0f * (xz + yw);
-        result.elements[4] = 2.0f * (xy + zw);
-        result.elements[5] = 1.0f - 2.0f * (xx + zz);
-        result.elements[6] = 2.0f * (yz - xw);
-        result.elements[8] = 2.0f * (xz - yw);
-        result.elements[9] = 2.0f * (yz + xw);
-        result.elements[10] = 1.0f - 2.0f * (xx + yy);
-
-        return result;
+        return Matrix4x4::FromQuaternion(*this);
     }
 
     Vector3 RotateVector(const Vector3& v) const {

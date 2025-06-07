@@ -1,18 +1,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameModeBase.h"
+// #include "GameFramework/GameModeBase.h"
+#include "BaseGameMode.h"
 #include "InvasionCycle.h"
 #include "ICGameMode.generated.h"
 
-UCLASS()
-class INVASIONCYCLE_API AICGameMode : public AGameModeBase
+class ICGameMode : public BaseGameMode
 {
     GENERATED_BODY()
 
 public:
-    AICGameMode();
-
+    ICGameMode();
+    virtual ~ICGameMode() override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
 
@@ -58,6 +58,8 @@ public:
     TMap<InvasionCycleConstants::EFactionType, int32> FactionScores;
 
 protected:
+    virtual void BeginDestroy() override;
+
     // Spawn points
     UPROPERTY(EditAnywhere, Category = "Game|Spawn")
     TArray<class ATargetPoint*> HumanSpawnPoints;

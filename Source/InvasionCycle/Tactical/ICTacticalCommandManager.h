@@ -1,7 +1,6 @@
 #pragma once
 
-#include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+// #include "GameFramework/Actor.h"
 #include "Tactical/ICTacticalCommandInterface.h"
 #include "ICTacticalCommandManager.generated.h"
 

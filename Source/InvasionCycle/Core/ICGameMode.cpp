@@ -1,5 +1,4 @@
 #include "Core/ICGameMode.h"
-#include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 #include "Characters/ICHumanCharacter.h"
 #include "Characters/ICVyrexCharacter.h"

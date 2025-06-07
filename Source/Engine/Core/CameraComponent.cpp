@@ -23,8 +23,8 @@ void CameraComponent::SetPerspective(float fovY, float aspect, float nearZ, floa
 
 void CameraComponent::SetView(const Vector3& position, const Vector3& target, const Vector3& up) {
     Vector3 zaxis = (position - target).Normalized();
-    Vector3 xaxis = up.Cross(zaxis).Normalized();
-    Vector3 yaxis = zaxis.Cross(xaxis);
+    Vector3 xaxis = Vector3::Cross(up, zaxis).Normalized();
+    Vector3 yaxis = Vector3::Cross(zaxis, xaxis);
     m_ViewMatrix = Matrix4x4::Identity();
     m_ViewMatrix.m[0][0] = xaxis.x;
     m_ViewMatrix.m[1][0] = xaxis.y;
@@ -35,14 +35,15 @@ void CameraComponent::SetView(const Vector3& position, const Vector3& target, co
     m_ViewMatrix.m[0][2] = zaxis.x;
     m_ViewMatrix.m[1][2] = zaxis.y;
     m_ViewMatrix.m[2][2] = zaxis.z;
-    m_ViewMatrix.m[3][0] = -xaxis.Dot(position);
-    m_ViewMatrix.m[3][1] = -yaxis.Dot(position);
-    m_ViewMatrix.m[3][2] = -zaxis.Dot(position);
+    m_ViewMatrix.m[3][0] = -Vector3::Dot(xaxis, position);
+    m_ViewMatrix.m[3][1] = -Vector3::Dot(yaxis, position);
+    m_ViewMatrix.m[3][2] = -Vector3::Dot(zaxis, position);
 }
 
 const Matrix4x4& CameraComponent::GetViewMatrix() const {
     return m_ViewMatrix;
 }
+
 const Matrix4x4& CameraComponent::GetProjectionMatrix() const {
     return m_ProjectionMatrix;
 }

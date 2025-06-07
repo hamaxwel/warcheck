@@ -1,19 +1,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+// #include "GameFramework/Character.h"
+#include "BaseCharacter.h"
 #include "Tactical/ICTacticalCommandInterface.h"
 #include "InvasionCycle.h"
 #include "ICBaseCharacter.generated.h"
 
-UCLASS()
-class INVASIONCYCLE_API AICBaseCharacter : public ACharacter, public ITacticalCommandInterface
+class ICBaseCharacter : public BaseCharacter
 {
     GENERATED_BODY()
-
 public:
-    AICBaseCharacter();
-
+    ICBaseCharacter();
+    virtual ~ICBaseCharacter() override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -85,4 +84,6 @@ protected:
     virtual void Die();
     virtual void OnHealthChanged();
     virtual void ProcessCommand(const FCommandData& Command);
+
+    virtual void BeginDestroy() override;
 }; 

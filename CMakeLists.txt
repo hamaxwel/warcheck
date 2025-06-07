@@ -28,23 +28,22 @@ set(GLFW_ROOT_DIR "${DEPS_DIR}/glfw")
 set(GLFW_INCLUDE_DIRS "${GLFW_ROOT_DIR}/include")
 set(GLFW_LIBRARIES "${GLFW_ROOT_DIR}/lib-vc2022/glfw3.lib")
 
-# Add GLM paths
-set(GLM_ROOT_DIR "${DEPS_DIR}/glm/glm")
-set(GLM_INCLUDE_DIRS "${GLM_ROOT_DIR}")
-
 # Find required packages
 find_package(OpenGL REQUIRED)
-find_package(glm REQUIRED)
-find_package(jsoncpp REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(jsoncpp CONFIG REQUIRED)
 
 # Include directories
 include_directories(
     ${GLEW_INCLUDE_DIRS}
     ${OPENAL_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIRS}
-    ${GLM_INCLUDE_DIRS}
     ${JSONCPP_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/Source
+    ${PROJECT_SOURCE_DIR}/Source/Engine
+    ${PROJECT_SOURCE_DIR}/Source/Engine/Math
+    ${PROJECT_SOURCE_DIR}/Source/Engine/Core
+    ${PROJECT_SOURCE_DIR}/Source/InvasionCycle
 )
 
 # Link directories
@@ -64,9 +63,12 @@ add_executable(InvasionEngine ${SOURCES})
 # Include directories
 target_include_directories(InvasionEngine PRIVATE
     ${CMAKE_SOURCE_DIR}/Source
+    ${CMAKE_SOURCE_DIR}/Source/Engine
+    ${CMAKE_SOURCE_DIR}/Source/Engine/Math
+    ${CMAKE_SOURCE_DIR}/Source/Engine/Core
+    ${CMAKE_SOURCE_DIR}/Source/InvasionCycle
     ${OPENGL_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIRS}
-    ${GLM_INCLUDE_DIRS}
     ${OPENAL_INCLUDE_DIR}
     ${GLEW_INCLUDE_DIRS}
     ${JSONCPP_INCLUDE_DIRS}
@@ -78,6 +80,7 @@ target_link_libraries(InvasionEngine PRIVATE
     ${OPENAL_LIBRARY}
     ${GLFW_LIBRARIES}
     ${JSONCPP_LIBRARIES}
+    glm::glm
     opengl32
 )
 

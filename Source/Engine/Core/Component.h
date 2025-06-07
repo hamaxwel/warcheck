@@ -1,10 +1,16 @@
 #pragma once
 
 #include <memory>
+#include "Scene.h"
+#include "../Math/Vector.h"
+#include "../Math/Quaternion.h"
+#include "../Math/Matrix.h"
 
 namespace InvasionEngine {
 
 class Entity;
+class Mesh;
+class Material;
 
 class Component {
 public:
@@ -21,21 +27,35 @@ public:
     virtual void LateUpdate(float deltaTime) {}
 
     // Entity access
-    Entity* GetEntity() const { return m_Entity; }
-    void SetEntity(Entity* entity) { m_Entity = entity; }
+    Entity* GetOwner() const { return m_Owner; }
+    void SetOwner(Entity* owner) { m_Owner = owner; }
 
     // Component state
     bool IsEnabled() const { return m_Enabled; }
     void SetEnabled(bool enabled) { m_Enabled = enabled; }
 
+    const Vector3& GetPosition() const;
+    void SetPosition(const Vector3& position);
+
+    const Quaternion& GetRotation() const;
+    void SetRotation(const Quaternion& rotation);
+
+    const std::string& GetName() const;
+    void SetName(const std::string& name);
+
+    Scene* GetScene() const;
+
 protected:
-    Entity* m_Entity = nullptr;
+    Entity* m_Owner;
     bool m_Enabled = true;
 };
 
 // Common component types
 class TransformComponent : public Component {
 public:
+    TransformComponent();
+    virtual ~TransformComponent();
+
     void SetPosition(const Vector3& position) { m_Position = position; }
     void SetRotation(const Quaternion& rotation) { m_Rotation = rotation; }
     void SetScale(const Vector3& scale) { m_Scale = scale; }
@@ -52,6 +72,9 @@ private:
 
 class MeshComponent : public Component {
 public:
+    MeshComponent();
+    virtual ~MeshComponent();
+
     void SetMesh(std::shared_ptr<Mesh> mesh) { m_Mesh = mesh; }
     void SetMaterial(std::shared_ptr<Material> material) { m_Material = material; }
 
@@ -63,30 +86,11 @@ private:
     std::shared_ptr<Material> m_Material;
 };
 
-class CameraComponent : public Component {
-public:
-    void SetFieldOfView(float fov) { m_FieldOfView = fov; }
-    void SetNearPlane(float near) { m_NearPlane = near; }
-    void SetFarPlane(float far) { m_FarPlane = far; }
-    void SetAspectRatio(float aspectRatio) { m_AspectRatio = aspectRatio; }
-
-    float GetFieldOfView() const { return m_FieldOfView; }
-    float GetNearPlane() const { return m_NearPlane; }
-    float GetFarPlane() const { return m_FarPlane; }
-    float GetAspectRatio() const { return m_AspectRatio; }
-
-    Matrix4x4 GetViewMatrix() const;
-    Matrix4x4 GetProjectionMatrix() const;
-
-private:
-    float m_FieldOfView = 60.0f;
-    float m_NearPlane = 0.1f;
-    float m_FarPlane = 1000.0f;
-    float m_AspectRatio = 16.0f / 9.0f;
-};
-
 class LightComponent : public Component {
 public:
+    LightComponent();
+    virtual ~LightComponent();
+
     enum class Type {
         Directional,
         Point,
@@ -115,6 +119,9 @@ private:
 
 class RigidBodyComponent : public Component {
 public:
+    RigidBodyComponent();
+    virtual ~RigidBodyComponent();
+
     void SetMass(float mass) { m_Mass = mass; }
     void SetVelocity(const Vector3& velocity) { m_Velocity = velocity; }
     void SetAngularVelocity(const Vector3& angularVelocity) { m_AngularVelocity = angularVelocity; }
@@ -141,6 +148,9 @@ private:
 
 class ColliderComponent : public Component {
 public:
+    ColliderComponent();
+    virtual ~ColliderComponent();
+
     enum class Type {
         Box,
         Sphere,

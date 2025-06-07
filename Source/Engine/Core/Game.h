@@ -34,6 +34,9 @@ public:
     bool IsRunning() const { return m_IsRunning; }
     void Quit() { m_IsRunning = false; }
 
+    // Engine access
+    SceneManager& GetSceneManager() { return m_Engine.GetSceneManager(); }
+
 protected:
     std::string m_Title = "Invasion Cycle";
     int m_Width = 1280;
@@ -41,6 +44,7 @@ protected:
     bool m_VSync = true;
     bool m_Fullscreen = false;
     bool m_IsRunning = false;
+    Engine& m_Engine = Engine::GetInstance();
 };
 
 class GameApplication {

@@ -5,10 +5,9 @@
 #include <vector>
 #include <unordered_map>
 #include <typeindex>
-#include "Math/Vector.h"
-#include "Math/Matrix.h"
-#include "Math/Quaternion.h"
-#include "Scene.h"
+#include "../Math/Vector.h"
+#include "../Math/Matrix.h"
+#include "../Math/Quaternion.h"
 
 namespace InvasionEngine {
 
@@ -20,10 +19,10 @@ class Mesh;
 class Material;
 class Renderer;
 
-class SceneManager {
+class Scene {
 public:
-    SceneManager();
-    ~SceneManager();
+    Scene(const std::string& name = "Scene");
+    ~Scene();
 
     void Initialize();
     void Shutdown();
@@ -31,15 +30,6 @@ public:
     void FixedUpdate(float fixedDeltaTime);
     void LateUpdate(float deltaTime);
     void Reset();
-
-    // TODO: Add methods for scene loading/unloading
-
-    // Scene management
-    Scene* CreateScene(const std::string& name);
-    void DestroyScene(Scene* scene);
-    Scene* GetScene(const std::string& name);
-    Scene* GetActiveScene() const { return m_ActiveScene; }
-    void SetActiveScene(Scene* scene);
 
     // Entity management
     std::shared_ptr<Entity> CreateEntity(const std::string& name = "Entity");
@@ -77,8 +67,12 @@ public:
     std::vector<std::shared_ptr<Entity>> FindEntitiesInBox(const Vector3& min, const Vector3& max) const;
     std::shared_ptr<Entity> Raycast(const Vector3& origin, const Vector3& direction, float maxDistance) const;
 
+    const std::string& GetName() const { return m_Name; }
+    void SetName(const std::string& name) { m_Name = name; }
+
 private:
     // Internal scene data
+    std::string m_Name;
     std::vector<std::shared_ptr<Entity>> m_Entities;
     std::unordered_map<std::string, std::shared_ptr<Entity>> m_EntityMap;
     std::shared_ptr<Camera> m_ActiveCamera;
@@ -97,38 +91,34 @@ private:
     void UpdateCameras();
     void UpdatePhysics();
     void UpdateAudio();
-
-    std::unordered_map<std::type_index, std::vector<Entity*>> m_EntitiesByType;
-    std::vector<Scene*> m_Scenes;
-    Scene* m_ActiveScene;
 };
 
 // Template implementations
 template<typename T>
-std::shared_ptr<T> SceneManager::AddComponent(std::shared_ptr<Entity> entity) {
+std::shared_ptr<T> Scene::AddComponent(std::shared_ptr<Entity> entity) {
     auto component = std::make_shared<T>();
     m_Components[std::type_index(typeid(T))].push_back(component);
     return component;
 }
 
 template<typename T>
-void SceneManager::RemoveComponent(std::shared_ptr<Entity> entity) {
+void Scene::RemoveComponent(std::shared_ptr<Entity> entity) {
     auto& components = m_Components[std::type_index(typeid(T))];
     components.erase(
         std::remove_if(components.begin(), components.end(),
             [entity](const std::shared_ptr<Component>& component) {
-                return component->GetEntity() == entity;
+                return component->GetOwner() == entity;
             }),
         components.end()
     );
 }
 
 template<typename T>
-std::shared_ptr<T> SceneManager::GetComponent(std::shared_ptr<Entity> entity) const {
+std::shared_ptr<T> Scene::GetComponent(std::shared_ptr<Entity> entity) const {
     auto it = m_Components.find(std::type_index(typeid(T)));
     if (it != m_Components.end()) {
         for (const auto& component : it->second) {
-            if (component->GetEntity() == entity) {
+            if (component->GetOwner() == entity) {
                 return std::static_pointer_cast<T>(component);
             }
         }
@@ -137,7 +127,7 @@ std::shared_ptr<T> SceneManager::GetComponent(std::shared_ptr<Entity> entity) co
 }
 
 template<typename T>
-std::vector<std::shared_ptr<T>> SceneManager::GetComponents() const {
+std::vector<std::shared_ptr<T>> Scene::GetComponents() const {
     std::vector<std::shared_ptr<T>> result;
     auto it = m_Components.find(std::type_index(typeid(T)));
     if (it != m_Components.end()) {

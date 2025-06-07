@@ -1,5 +1,4 @@
 #include "InvasionCycle.h"
-#include "Modules/ModuleManager.h"
 
 IMPLEMENT_PRIMARY_GAME_MODULE(FInvasionCycleModule, InvasionCycle, "InvasionCycle");
 

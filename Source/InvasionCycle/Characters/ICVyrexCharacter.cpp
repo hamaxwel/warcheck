@@ -1,5 +1,4 @@
 #include "Characters/ICVyrexCharacter.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 

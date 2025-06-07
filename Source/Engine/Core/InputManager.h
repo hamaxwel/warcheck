@@ -110,6 +110,11 @@ enum class MouseButton {
 
 class InputManager {
 public:
+    static InputManager& GetInstance() {
+        static InputManager instance;
+        return instance;
+    }
+
     InputManager();
     ~InputManager();
 
@@ -121,10 +126,15 @@ public:
     bool IsMouseButtonPressed(int button) const;
     void GetMousePosition(float& x, float& y) const;
 
+    float GetMouseX() const { return m_MouseX; }
+    float GetMouseY() const { return m_MouseY; }
+
     // TODO: Add input binding and event system
 
 private:
     // Internal input state
+    float m_MouseX;
+    float m_MouseY;
 };
 
 } // namespace InvasionEngine 

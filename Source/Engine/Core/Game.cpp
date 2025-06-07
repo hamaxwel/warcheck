@@ -60,15 +60,14 @@ void GameApplication::Run() {
 
 void Game::Update(float deltaTime) {
     // ... existing update logic ...
-    SceneManager* scene = GetSceneManager();
-    scene->Update(deltaTime);
+    GetSceneManager().Update(deltaTime);
 
     // Check for win/lose and restart
     const std::string& msg = UIManager::GetInstance().GetMessage();
     if (!msg.empty()) {
         InputManager& input = InputManager::GetInstance();
         if (input.IsKeyPressed(Key::Enter)) {
-            scene->Reset();
+            GetSceneManager().Reset();
         }
     }
 }

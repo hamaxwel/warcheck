@@ -53,6 +53,25 @@ struct Vector3 {
         return Vector3(x * scalar, y * scalar, z * scalar);
     }
 
+    Vector3& operator+=(const Vector3& other) {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        return *this;
+    }
+
+    float LengthSquared() const {
+        return x * x + y * y + z * z;
+    }
+
+    Vector3 Normalized() const {
+        float len = Length();
+        if (len > 0.0f) {
+            return Vector3(x / len, y / len, z / len);
+        }
+        return *this;
+    }
+
     float Length() const {
         return std::sqrt(x * x + y * y + z * z);
     }

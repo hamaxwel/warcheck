@@ -1,7 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/HUD.h"
+// #include "GameFramework/HUD.h"
+#include "BaseHUD.h"
 #include "Characters/ICBaseCharacter.h"
 #include "Tactical/ICTacticalCommandInterface.h"
 #include "ICTacticalHUD.generated.h"
@@ -27,17 +28,15 @@ struct FSquadMemberInfo
     EFactionType FactionType;
 };
 
-UCLASS()
-class INVASIONCYCLE_API AICTacticalHUD : public AHUD
+class ICTacticalHUD : public BaseHUD
 {
     GENERATED_BODY()
-
 public:
-    AICTacticalHUD();
-
-    virtual void DrawHUD() override;
+    ICTacticalHUD();
+    virtual ~ICTacticalHUD() override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
+    virtual void DrawHUD() override;
 
     UFUNCTION(BlueprintCallable)
     void UpdateSquadInfo(const TArray<FSquadMemberInfo>& SquadMembers);
@@ -49,6 +48,8 @@ public:
     void ShowSquadJoinPrompt(APlayerController* SquadLeader);
 
 protected:
+    virtual void BeginDestroy() override;
+
     UPROPERTY(EditDefaultsOnly, Category = "UI")
     TSubclassOf<UUserWidget> TacticalWidgetClass;
 
