@@ -68,6 +68,27 @@ void Scene::LateUpdate(float deltaTime) {
     }
 }
 
+void Scene::Render(Renderer* renderer) {
+    if (!renderer) return;
+
+    // Set up camera
+    if (m_ActiveCamera) {
+        renderer->SetViewMatrix(m_ActiveCamera->GetViewMatrix());
+        renderer->SetProjectionMatrix(m_ActiveCamera->GetProjectionMatrix());
+    }
+
+    // Set up lights
+    renderer->SetLights(m_Lights);
+
+    // Render all entities with mesh components
+    for (auto& entity : m_Entities) {
+        auto mesh = entity->GetComponent<Mesh>();
+        if (mesh) {
+            renderer->DrawMesh(mesh, entity->GetTransform());
+        }
+    }
+}
+
 void Scene::Reset() {
     Shutdown();
     Initialize();

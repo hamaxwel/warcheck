@@ -1,22 +1,17 @@
 #pragma once
+#include <vector>
+#include <map>
+#include <string>
 
-// #include "GameFramework/Actor.h"
-#include "Tactical/ICTacticalCommandInterface.h"
-#include "ICTacticalCommandManager.generated.h"
-
-UENUM(BlueprintType)
-enum class ESquadFormation : uint8
-{
+// Example enums for squad formation and role
+enum class ESquadFormation {
     Line,
     Column,
     Wedge,
-    Echelon,
-    Diamond
+    Vee
 };
 
-UENUM(BlueprintType)
-enum class ESquadRole : uint8
-{
+enum class ESquadRole {
     Leader,
     Point,
     Flank,
@@ -24,115 +19,48 @@ enum class ESquadRole : uint8
     Support
 };
 
-UCLASS()
-class INVASIONCYCLE_API AICTacticalCommandManager : public AActor
-{
-    GENERATED_BODY()
+struct CommandData {
+    std::string Type;
+    std::string Target;
+    float Priority;
+    bool IsUrgent;
+};
 
+struct SquadMemberData {
+    void* Member; // was AActor*
+    ESquadRole Role;
+    // Add other fields as needed
+};
+
+struct SquadData {
+    void* Leader; // was AActor*
+    std::vector<SquadMemberData> Members;
+    std::vector<CommandData> CommandQueue;
+    ESquadFormation Formation;
+    float FormationSpacing;
+};
+
+class ICTacticalCommandManager {
 public:
-    AICTacticalCommandManager();
-
-    virtual void BeginPlay() override;
-    virtual void Tick(float DeltaTime) override;
-
-    // Squad management
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Squad")
-    void CreateSquad(AActor* Leader);
-
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Squad")
-    void AddToSquad(AActor* Member, AActor* SquadLeader);
-
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Squad")
-    void RemoveFromSquad(AActor* Member);
-
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Squad")
-    void SetSquadFormation(AActor* SquadLeader, ESquadFormation NewFormation);
-
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Squad")
-    void AssignSquadRole(AActor* Member, ESquadRole NewRole);
-
-    // Command execution
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Command")
-    void IssueCommand(const FCommandData& Command, AActor* Target);
-
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Command")
-    void IssueSquadCommand(const FCommandData& Command, AActor* SquadLeader);
-
-    // Command validation and processing
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Command")
-    bool ValidateCommand(const FCommandData& Command, AActor* Target) const;
-
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Command")
+    ICTacticalCommandManager();
+    void BeginPlay();
+    void Tick(float deltaTime);
+    void CreateSquad(void* leader);
+    void AddToSquad(void* member, void* squadLeader);
+    void RemoveFromSquad(void* member);
+    void SetSquadFormation(void* squadLeader, ESquadFormation newFormation);
+    void AssignSquadRole(void* member, ESquadRole newRole);
+    void IssueCommand(const CommandData& command, void* target);
+    void IssueSquadCommand(const CommandData& command, void* squadLeader);
+    bool ValidateCommand(const CommandData& command, void* target) const;
     void ProcessCommandQueue();
-
-    // Squad status and information
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Squad")
-    TArray<AActor*> GetSquadMembers(AActor* SquadLeader) const;
-
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Squad")
-    bool IsInSquad(AActor* Member) const;
-
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Squad")
-    ESquadFormation GetSquadFormation(AActor* SquadLeader) const;
-
-    UFUNCTION(BlueprintCallable, Category = "Tactical|Squad")
-    ESquadRole GetSquadRole(AActor* Member) const;
+    std::vector<void*> GetSquadMembers(void* squadLeader) const;
+    bool IsInSquad(void* member) const;
+    ESquadFormation GetSquadFormation(void* squadLeader) const;
+    ESquadRole GetSquadRole(void* member) const;
 
 protected:
-    // Squad data structure
-    USTRUCT()
-    struct FSquadMemberData
-    {
-        GENERATED_BODY()
-
-        UPROPERTY()
-        AActor* Member;
-
-        UPROPERTY()
-        ESquadRole Role;
-
-        UPROPERTY()
-        FVector FormationOffset;
-    };
-
-    USTRUCT()
-    struct FSquadData
-    {
-        GENERATED_BODY()
-
-        UPROPERTY()
-        AActor* Leader;
-
-        UPROPERTY()
-        TArray<FSquadMemberData> Members;
-
-        UPROPERTY()
-        TArray<FCommandData> CommandQueue;
-
-        UPROPERTY()
-        ESquadFormation Formation;
-
-        UPROPERTY()
-        float FormationSpacing;
-    };
-
-    // Squad management
-    UPROPERTY()
-    TMap<AActor*, FSquadData> Squads;
-
-    // Command processing
-    UPROPERTY()
-    TMap<AActor*, TArray<FCommandData>> CommandQueues;
-
-    // Formation settings
-    UPROPERTY(EditDefaultsOnly, Category = "Tactical|Formation")
+    std::map<void*, SquadData> Squads;
+    std::map<void*, std::vector<CommandData>> CommandQueues;
     float DefaultFormationSpacing;
-
-    // Helper functions
-    void InitializeSquad(AActor* Leader);
-    void CleanupSquad(AActor* SquadLeader);
-    void UpdateSquadStatus(AActor* SquadLeader);
-    bool CanJoinSquad(AActor* Member, AActor* SquadLeader) const;
-    void UpdateFormationPositions(AActor* SquadLeader);
-    FVector CalculateFormationOffset(const FSquadData& Squad, const FSquadMemberData& Member) const;
 }; 

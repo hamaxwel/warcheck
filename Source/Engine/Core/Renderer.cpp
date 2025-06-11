@@ -7,10 +7,17 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "WeaponComponent.h"
 #include "AlienCharacter.h"
+#include "Material.h"
 
 namespace InvasionEngine {
 
-Renderer::Renderer() {}
+Renderer::Renderer() : m_AmbientLightIntensity(0.2f), m_Shader(nullptr) {
+    m_ViewMatrix = Matrix4x4::Identity();
+    m_ProjectionMatrix = Matrix4x4::Identity();
+    m_ModelMatrix = Matrix4x4::Identity();
+    m_AmbientLightColor = Vector3(1.0f, 1.0f, 1.0f);
+}
+
 Renderer::~Renderer() {}
 
 bool Renderer::Initialize() {
@@ -38,31 +45,64 @@ void Renderer::Clear(float r, float g, float b, float a) {
     glClearColor(r, g, b, a);
 }
 
-void Renderer::DrawMesh(const Mesh* mesh, const CameraComponent* camera, const Vector3& position, const Quaternion& rotation, const Vector3& scale) {
-    if (!mesh || !camera) return;
+void Renderer::SetViewMatrix(const Matrix4x4& viewMatrix) {
+    m_ViewMatrix = viewMatrix;
+}
+
+void Renderer::SetProjectionMatrix(const Matrix4x4& projectionMatrix) {
+    m_ProjectionMatrix = projectionMatrix;
+}
+
+void Renderer::SetModelMatrix(const Matrix4x4& modelMatrix) {
+    m_ModelMatrix = modelMatrix;
+}
+
+void Renderer::SetLights(const std::vector<std::shared_ptr<Light>>& lights) {
+    m_Lights = lights;
+}
+
+void Renderer::SetAmbientLight(const Vector3& color, float intensity) {
+    m_AmbientLightColor = color;
+    m_AmbientLightIntensity = intensity;
+}
+
+void Renderer::DrawMesh(const std::shared_ptr<Mesh>& mesh, const Matrix4x4& transform) {
+    if (!mesh || !m_Shader) return;
 
     m_Shader->Use();
 
-    // Set uniforms
-    Matrix4x4 model = Matrix4x4::Identity();
-    model = model * Matrix4x4::Scale(scale);
-    model = model * Matrix4x4::FromQuaternion(rotation);
-    model = model * Matrix4x4::Translation(position);
+    // Set matrices
+    m_Shader->SetUniform("model", transform.m[0]);
+    m_Shader->SetUniform("view", m_ViewMatrix.m[0]);
+    m_Shader->SetUniform("projection", m_ProjectionMatrix.m[0]);
 
-    m_Shader->SetUniform("model", model.m[0]);
-    m_Shader->SetUniform("view", camera->GetViewMatrix().m[0]);
-    m_Shader->SetUniform("projection", camera->GetProjectionMatrix().m[0]);
+    // Set material properties if available
+    if (m_CurrentMaterial) {
+        m_Shader->SetUniform("material.diffuse", m_CurrentMaterial->GetDiffuseColor());
+        m_Shader->SetUniform("material.specular", m_CurrentMaterial->GetSpecularColor());
+        m_Shader->SetUniform("material.shininess", m_CurrentMaterial->GetShininess());
+    }
 
-    // Set light uniforms
-    Vector3 lightDir(0.0f, -1.0f, 0.0f);
-    Vector3 lightColor(1.0f, 1.0f, 1.0f);
-    Vector3 objectColor(0.8f, 0.8f, 0.8f);
-    m_Shader->SetUniform("lightDir", lightDir.x);
-    m_Shader->SetUniform("lightColor", lightColor.x);
-    m_Shader->SetUniform("objectColor", objectColor.x);
+    // Set light properties
+    m_Shader->SetUniform("ambientLight.color", m_AmbientLightColor);
+    m_Shader->SetUniform("ambientLight.intensity", m_AmbientLightIntensity);
 
     // Draw mesh
     mesh->Draw();
+
+    if (m_Shader) m_Shader->Unbind();
+}
+
+void Renderer::DrawSprite(const std::string& textureName, const Vector2& position, const Vector2& size) {
+    // TODO: Implement sprite rendering
+}
+
+void Renderer::DrawText(const std::string& text, const Vector2& position, float scale) {
+    // TODO: Implement text rendering
+}
+
+void Renderer::SetMaterial(const std::shared_ptr<Material>& material) {
+    m_CurrentMaterial = material;
 }
 
 void Renderer::RenderScene(const std::vector<std::shared_ptr<Entity>>& entities) {

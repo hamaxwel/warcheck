@@ -10,26 +10,9 @@ namespace InvasionEngine {
 
 class Window;
 
-enum class KeyCode {
+enum class Key {
     Unknown = -1,
     Space = 32,
-    Apostrophe = 39,
-    Comma = 44,
-    Minus = 45,
-    Period = 46,
-    Slash = 47,
-    Num0 = 48,
-    Num1 = 49,
-    Num2 = 50,
-    Num3 = 51,
-    Num4 = 52,
-    Num5 = 53,
-    Num6 = 54,
-    Num7 = 55,
-    Num8 = 56,
-    Num9 = 57,
-    Semicolon = 59,
-    Equal = 61,
     A = 65,
     B = 66,
     C = 67,
@@ -56,50 +39,12 @@ enum class KeyCode {
     X = 88,
     Y = 89,
     Z = 90,
-    LeftBracket = 91,
-    Backslash = 92,
-    RightBracket = 93,
-    GraveAccent = 96,
-    Escape = 256,
     Enter = 257,
-    Tab = 258,
-    Backspace = 259,
-    Insert = 260,
-    Delete = 261,
-    Right = 262,
-    Left = 263,
-    Down = 264,
+    Escape = 256,
     Up = 265,
-    PageUp = 266,
-    PageDown = 267,
-    Home = 268,
-    End = 269,
-    CapsLock = 280,
-    ScrollLock = 281,
-    NumLock = 282,
-    PrintScreen = 283,
-    Pause = 284,
-    F1 = 290,
-    F2 = 291,
-    F3 = 292,
-    F4 = 293,
-    F5 = 294,
-    F6 = 295,
-    F7 = 296,
-    F8 = 297,
-    F9 = 298,
-    F10 = 299,
-    F11 = 300,
-    F12 = 301,
-    LeftShift = 340,
-    LeftControl = 341,
-    LeftAlt = 342,
-    LeftSuper = 343,
-    RightShift = 344,
-    RightControl = 345,
-    RightAlt = 346,
-    RightSuper = 347,
-    Menu = 348
+    Down = 264,
+    Left = 263,
+    Right = 262
 };
 
 enum class MouseButton {
@@ -122,9 +67,19 @@ public:
     void Shutdown();
     void Update();
 
-    bool IsKeyPressed(int key) const;
-    bool IsMouseButtonPressed(int button) const;
+    bool IsKeyPressed(Key key) const;
+    bool IsKeyJustPressed(Key key) const;
+    bool IsKeyJustReleased(Key key) const;
+
     void GetMousePosition(float& x, float& y) const;
+    void GetMouseDelta(float& dx, float& dy) const;
+    bool IsMouseButtonPressed(int button) const;
+    bool IsMouseButtonJustPressed(int button) const;
+    bool IsMouseButtonJustReleased(int button) const;
+
+    void SetKeyCallback(std::function<void(Key, bool)> callback);
+    void SetMouseButtonCallback(std::function<void(int, bool)> callback);
+    void SetMouseMoveCallback(std::function<void(float, float)> callback);
 
     float GetMouseX() const { return m_MouseX; }
     float GetMouseY() const { return m_MouseY; }
@@ -132,9 +87,17 @@ public:
     // TODO: Add input binding and event system
 
 private:
-    // Internal input state
+    std::unordered_map<Key, bool> m_KeyStates;
+    std::unordered_map<Key, bool> m_PreviousKeyStates;
+    std::unordered_map<int, bool> m_MouseButtonStates;
+    std::unordered_map<int, bool> m_PreviousMouseButtonStates;
     float m_MouseX;
     float m_MouseY;
+    float m_PreviousMouseX;
+    float m_PreviousMouseY;
+    std::function<void(Key, bool)> m_KeyCallback;
+    std::function<void(int, bool)> m_MouseButtonCallback;
+    std::function<void(float, float)> m_MouseMoveCallback;
 };
 
 } // namespace InvasionEngine 

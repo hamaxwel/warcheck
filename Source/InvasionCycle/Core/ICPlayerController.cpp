@@ -1,12 +1,19 @@
 #include "Core/ICPlayerController.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
-#include "Kismet/GameplayStatics.h"
 #include "Characters/ICBaseCharacter.h"
 #include "Tactical/ICTacticalCommandManager.h"
 #include "Tactical/ICTacticalCommandInterface.h"
+#include <glm/gtc/matrix_transform.hpp>
 
-AICPlayerController::AICPlayerController()
+namespace InvasionCycle {
+
+ICPlayerController::ICPlayerController()
+    : m_Faction(EFactionType::None)
+    , m_MovementInput(0.0f)
+    , m_TurnInput(0.0f)
+    , m_LookUpInput(0.0f)
+    , m_IsJumping(false)
+    , m_IsFiring(false)
 {
     // Set default values
     TacticalViewHeight = 1000.0f;
@@ -26,13 +33,124 @@ AICPlayerController::AICPlayerController()
     TacticalCamera->bUsePawnControlRotation = false;
 }
 
-void AICPlayerController::BeginPlay()
+bool ICPlayerController::Initialize()
+{
+    m_PossessedCharacter.reset();
+    m_Faction = EFactionType::None;
+    m_MovementInput = glm::vec3(0.0f);
+    m_TurnInput = 0.0f;
+    m_LookUpInput = 0.0f;
+    m_IsJumping = false;
+    m_IsFiring = false;
+    return true;
+}
+
+void ICPlayerController::Update(float deltaTime)
+{
+    if (m_PossessedCharacter) {
+        // Apply movement input
+        m_PossessedCharacter->Move(m_MovementInput);
+        
+        // Apply rotation input
+        m_PossessedCharacter->Turn(m_TurnInput);
+        m_PossessedCharacter->LookUp(m_LookUpInput);
+
+        // Handle jumping
+        if (m_IsJumping) {
+            m_PossessedCharacter->Jump();
+            m_IsJumping = false;
+        }
+
+        // Handle firing
+        if (m_IsFiring) {
+            m_PossessedCharacter->Fire();
+            m_IsFiring = false;
+        }
+
+        // Update character
+        m_PossessedCharacter->Update(deltaTime);
+    }
+}
+
+void ICPlayerController::Render()
+{
+    if (m_PossessedCharacter) {
+        m_PossessedCharacter->Render();
+    }
+}
+
+void ICPlayerController::Shutdown()
+{
+    UnpossessCharacter();
+}
+
+void ICPlayerController::PossessCharacter(std::shared_ptr<ICBaseCharacter> character)
+{
+    if (m_PossessedCharacter) {
+        UnpossessCharacter();
+    }
+    m_PossessedCharacter = character;
+    if (m_PossessedCharacter) {
+        m_PossessedCharacter->SetController(this);
+    }
+}
+
+void ICPlayerController::UnpossessCharacter()
+{
+    if (m_PossessedCharacter) {
+        m_PossessedCharacter->SetController(nullptr);
+        m_PossessedCharacter.reset();
+    }
+}
+
+void ICPlayerController::HandleInput()
+{
+    // Reset input values
+    m_MovementInput = glm::vec3(0.0f);
+    m_TurnInput = 0.0f;
+    m_LookUpInput = 0.0f;
+
+    // TODO: Implement actual input handling using GLFW
+    // This is where we would check for key presses and update the input values
+}
+
+void ICPlayerController::MoveForward(float value)
+{
+    m_MovementInput.z = value;
+}
+
+void ICPlayerController::MoveRight(float value)
+{
+    m_MovementInput.x = value;
+}
+
+void ICPlayerController::Turn(float value)
+{
+    m_TurnInput = value;
+}
+
+void ICPlayerController::LookUp(float value)
+{
+    m_LookUpInput = value;
+}
+
+void ICPlayerController::Jump()
+{
+    m_IsJumping = true;
+}
+
+void ICPlayerController::Fire()
+{
+    m_IsFiring = true;
+}
+
+void ICPlayerController::BeginPlay()
 {
     Super::BeginPlay();
     InitializeCamera();
 }
 
-void AICPlayerController::Tick(float DeltaTime)
+void ICPlayerController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
     UpdateCamera(DeltaTime);
@@ -43,24 +161,24 @@ void AICPlayerController::Tick(float DeltaTime)
     }
 }
 
-void AICPlayerController::SetupInputComponent()
+void ICPlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
 
     // View switching
-    InputComponent->BindAction("TacticalView", IE_Pressed, this, &AICPlayerController::OnTacticalViewPressed);
-    InputComponent->BindAction("TacticalView", IE_Released, this, &AICPlayerController::OnTacticalViewReleased);
+    InputComponent->BindAction("TacticalView", IE_Pressed, this, &ICPlayerController::OnTacticalViewPressed);
+    InputComponent->BindAction("TacticalView", IE_Released, this, &ICPlayerController::OnTacticalViewReleased);
 
     // Command input
-    InputComponent->BindAction("Command", IE_Pressed, this, &AICPlayerController::OnCommandPressed);
-    InputComponent->BindAction("Command", IE_Released, this, &AICPlayerController::OnCommandReleased);
+    InputComponent->BindAction("Command", IE_Pressed, this, &ICPlayerController::OnCommandPressed);
+    InputComponent->BindAction("Command", IE_Released, this, &ICPlayerController::OnCommandReleased);
 
     // Squad management
-    InputComponent->BindAction("CreateSquad", IE_Pressed, this, &AICPlayerController::OnSquadCreatePressed);
-    InputComponent->BindAction("JoinSquad", IE_Pressed, this, &AICPlayerController::OnSquadJoinPressed);
+    InputComponent->BindAction("CreateSquad", IE_Pressed, this, &ICPlayerController::OnSquadCreatePressed);
+    InputComponent->BindAction("JoinSquad", IE_Pressed, this, &ICPlayerController::OnSquadJoinPressed);
 }
 
-void AICPlayerController::SwitchToTacticalView()
+void ICPlayerController::SwitchToTacticalView()
 {
     if (!bIsInTacticalView)
     {
@@ -78,7 +196,7 @@ void AICPlayerController::SwitchToTacticalView()
     }
 }
 
-void AICPlayerController::SwitchToFirstPersonView()
+void ICPlayerController::SwitchToFirstPersonView()
 {
     if (bIsInTacticalView)
     {
@@ -96,7 +214,7 @@ void AICPlayerController::SwitchToFirstPersonView()
     }
 }
 
-void AICPlayerController::IssueMoveCommand(const FVector& TargetLocation)
+void ICPlayerController::IssueMoveCommand(const FVector& TargetLocation)
 {
     if (bIsInTacticalView)
     {
@@ -123,7 +241,7 @@ void AICPlayerController::IssueMoveCommand(const FVector& TargetLocation)
     }
 }
 
-void AICPlayerController::IssueAttackCommand(AActor* Target)
+void ICPlayerController::IssueAttackCommand(AActor* Target)
 {
     if (bIsInTacticalView && Target)
     {
@@ -147,7 +265,7 @@ void AICPlayerController::IssueAttackCommand(AActor* Target)
     }
 }
 
-void AICPlayerController::IssueDefendCommand(const FVector& Location)
+void ICPlayerController::IssueDefendCommand(const FVector& Location)
 {
     if (bIsInTacticalView)
     {
@@ -171,7 +289,7 @@ void AICPlayerController::IssueDefendCommand(const FVector& Location)
     }
 }
 
-void AICPlayerController::IssueSpecialCommand(const FVector& Location)
+void ICPlayerController::IssueSpecialCommand(const FVector& Location)
 {
     if (bIsInTacticalView)
     {
@@ -195,7 +313,7 @@ void AICPlayerController::IssueSpecialCommand(const FVector& Location)
     }
 }
 
-void AICPlayerController::CreateSquad()
+void ICPlayerController::CreateSquad()
 {
     if (AICGameMode* GameMode = Cast<AICGameMode>(GetWorld()->GetAuthGameMode()))
     {
@@ -203,7 +321,7 @@ void AICPlayerController::CreateSquad()
     }
 }
 
-void AICPlayerController::JoinSquad(APlayerController* SquadLeader)
+void ICPlayerController::JoinSquad(APlayerController* SquadLeader)
 {
     if (AICGameMode* GameMode = Cast<AICGameMode>(GetWorld()->GetAuthGameMode()))
     {
@@ -211,37 +329,37 @@ void AICPlayerController::JoinSquad(APlayerController* SquadLeader)
     }
 }
 
-void AICPlayerController::OnTacticalViewPressed()
+void ICPlayerController::OnTacticalViewPressed()
 {
     SwitchToTacticalView();
 }
 
-void AICPlayerController::OnTacticalViewReleased()
+void ICPlayerController::OnTacticalViewReleased()
 {
     SwitchToFirstPersonView();
 }
 
-void AICPlayerController::OnCommandPressed()
+void ICPlayerController::OnCommandPressed()
 {
     bIsCommanding = true;
 }
 
-void AICPlayerController::OnCommandReleased()
+void ICPlayerController::OnCommandReleased()
 {
     bIsCommanding = false;
 }
 
-void AICPlayerController::OnSquadCreatePressed()
+void ICPlayerController::OnSquadCreatePressed()
 {
     CreateSquad();
 }
 
-void AICPlayerController::OnSquadJoinPressed()
+void ICPlayerController::OnSquadJoinPressed()
 {
     // TODO: Implement squad join UI
 }
 
-void AICPlayerController::InitializeCamera()
+void ICPlayerController::InitializeCamera()
 {
     if (APawn* ControlledPawn = GetPawn())
     {
@@ -250,7 +368,7 @@ void AICPlayerController::InitializeCamera()
     }
 }
 
-void AICPlayerController::UpdateCamera(float DeltaTime)
+void ICPlayerController::UpdateCamera(float DeltaTime)
 {
     if (bIsInTacticalView)
     {
@@ -278,7 +396,7 @@ void AICPlayerController::UpdateCamera(float DeltaTime)
     }
 }
 
-void AICPlayerController::ProcessCommandInput()
+void ICPlayerController::ProcessCommandInput()
 {
     if (bIsInTacticalView)
     {
@@ -316,7 +434,7 @@ void AICPlayerController::ProcessCommandInput()
     }
 }
 
-FVector AICPlayerController::GetMouseWorldPosition() const
+FVector ICPlayerController::GetMouseWorldPosition() const
 {
     float LocationX;
     float LocationY;
@@ -336,4 +454,6 @@ FVector AICPlayerController::GetMouseWorldPosition() const
     );
 
     return Intersection;
-} 
+}
+
+} // namespace InvasionCycle 

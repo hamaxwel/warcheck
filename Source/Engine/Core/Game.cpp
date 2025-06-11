@@ -6,6 +6,56 @@
 
 namespace InvasionEngine {
 
+Game::Game()
+    : m_AccumulatedTime(0.0f)
+{
+}
+
+bool Game::Initialize()
+{
+    m_GameMode.reset();
+    m_AccumulatedTime = 0.0f;
+    return true;
+}
+
+void Game::Update(float deltaTime)
+{
+    // Handle input
+    HandleInput();
+
+    // Fixed time step update
+    m_AccumulatedTime += deltaTime;
+    while (m_AccumulatedTime >= FixedTimeStep) {
+        if (m_GameMode) {
+            m_GameMode->Update(FixedTimeStep);
+        }
+        m_AccumulatedTime -= FixedTimeStep;
+    }
+}
+
+void Game::Render()
+{
+    if (m_GameMode) {
+        m_GameMode->Render();
+    }
+}
+
+void Game::Shutdown()
+{
+    m_GameMode.reset();
+}
+
+void Game::SetGameMode(std::shared_ptr<GameMode> gameMode)
+{
+    m_GameMode = gameMode;
+}
+
+void Game::HandleInput()
+{
+    // Base class implementation does nothing
+    // Derived classes should override this method
+}
+
 bool GameApplication::Initialize(std::shared_ptr<Game> game) {
     m_Game = game;
 

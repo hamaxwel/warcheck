@@ -1,38 +1,45 @@
 #pragma once
+
 #include "Component.h"
-#include "Math/Vector.h"
-#include <memory>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 namespace InvasionEngine {
 
+class Entity;
+
 class WeaponComponent : public Component {
 public:
-    WeaponComponent();
+    WeaponComponent(Entity* owner);
     virtual ~WeaponComponent() = default;
 
     virtual void Update(float deltaTime) override;
 
-    void SetDamage(float damage) { m_Damage = damage; }
-    void SetFireRate(float rate) { m_FireRate = rate; }
-    void SetAmmo(int ammo) { m_Ammo = ammo; m_MaxAmmo = ammo; }
-    int GetAmmo() const { return m_Ammo; }
+    bool Fire(const glm::vec3& direction);
+
+    // Getters and setters
+    void SetDamage(float damage);
+    void SetRange(float range);
+    void SetFireRate(float fireRate);
+    float GetDamage() const;
+    float GetRange() const;
+    float GetFireRate() const;
 
     // Visual feedback
     bool IsShotLineActive() const { return m_ShotLineTimer > 0.0f; }
-    Vector3 GetShotOrigin() const { return m_LastShotOrigin; }
-    Vector3 GetShotTarget() const { return m_LastShotTarget; }
+    glm::vec3 GetShotOrigin() const { return m_LastShotOrigin; }
+    glm::vec3 GetShotTarget() const { return m_LastShotTarget; }
 
 private:
     float m_Damage;
+    float m_Range;
     float m_FireRate;
+    float m_LastFireTime;
     int m_Ammo;
     int m_MaxAmmo;
-    float m_LastFireTime;
-
-    // Visual feedback
     float m_ShotLineTimer;
-    Vector3 m_LastShotOrigin;
-    Vector3 m_LastShotTarget;
+    glm::vec3 m_LastShotOrigin;
+    glm::vec3 m_LastShotTarget;
 };
 
 } // namespace InvasionEngine 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(InvasionEngine)
+project(InvasionCycle)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -10,93 +10,77 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# Set dependencies path
-set(DEPS_DIR ${CMAKE_SOURCE_DIR}/dependencies)
+# Set dependencies directory
+set(DEPS_DIR "${CMAKE_SOURCE_DIR}/dependencies")
 
-# Add GLEW paths
-set(GLEW_ROOT_DIR "${DEPS_DIR}/glew/glew-2.2.0")
-set(GLEW_INCLUDE_DIRS "${GLEW_ROOT_DIR}/include")
-set(GLEW_LIBRARIES "${GLEW_ROOT_DIR}/lib/Release/x64/glew32.lib")
+# Set STB root directory
+set(STB_ROOT "${DEPS_DIR}/stb")
+set(STB_INCLUDE_DIRS "${STB_ROOT}/include")
 
-# Add OpenAL paths
-set(OPENAL_ROOT_DIR "${DEPS_DIR}/openal")
-set(OPENAL_INCLUDE_DIR "${OPENAL_ROOT_DIR}/include")
-set(OPENAL_LIBRARY "${OPENAL_ROOT_DIR}/libs/Win64/OpenAL32.lib")
+# Set GLM root directory
+set(GLM_ROOT "${DEPS_DIR}/glm/glm")
+set(GLM_INCLUDE_DIRS "${GLM_ROOT}")
 
-# Add GLFW paths
-set(GLFW_ROOT_DIR "${DEPS_DIR}/glfw")
-set(GLFW_INCLUDE_DIRS "${GLFW_ROOT_DIR}/include")
-set(GLFW_LIBRARIES "${GLFW_ROOT_DIR}/lib-vc2022/glfw3.lib")
+# GLEW
+set(GLEW_ROOT "${DEPS_DIR}/glew/glew-2.2.0")
+set(GLEW_INCLUDE_DIRS "${GLEW_ROOT}/include")
+set(GLEW_LIBRARIES "${GLEW_ROOT}/lib/Release/x64/glew32.lib")
+set(GLEW_DLL "${GLEW_ROOT}/bin/Release/x64/glew32.dll")
 
-# Find required packages
-find_package(OpenGL REQUIRED)
-find_package(glm CONFIG REQUIRED)
-find_package(jsoncpp CONFIG REQUIRED)
+# GLFW
+set(GLFW_ROOT "${DEPS_DIR}/glfw/glfw-3.4.bin.WIN64")
+set(GLFW_INCLUDE_DIRS "${GLFW_ROOT}/include")
+set(GLFW_LIBRARIES "${GLFW_ROOT}/lib-vc2022/glfw3.lib")
+set(GLFW_DLL "${GLFW_ROOT}/lib-vc2022/glfw3.dll")
 
-# Include directories
+# OpenAL
+set(OPENAL_ROOT "${DEPS_DIR}/openal-soft-1.22.2-bin")
+set(OPENAL_INCLUDE_DIR "${OPENAL_ROOT}/include")
+set(OPENAL_LIBRARY "${OPENAL_ROOT}/libs/Win64/OpenAL32.lib")
+set(OPENAL_DLL "${OPENAL_ROOT}/bin/Win64/soft_oal.dll")
+
+# Set include directories
 include_directories(
+    ${CMAKE_SOURCE_DIR}/Source
+    ${CMAKE_SOURCE_DIR}/Source/Engine
+    ${CMAKE_SOURCE_DIR}/Source/InvasionCycle
+    ${CMAKE_SOURCE_DIR}/Source/InvasionCycle/Core
     ${GLEW_INCLUDE_DIRS}
-    ${OPENAL_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIRS}
-    ${JSONCPP_INCLUDE_DIRS}
-    ${PROJECT_SOURCE_DIR}/Source
-    ${PROJECT_SOURCE_DIR}/Source/Engine
-    ${PROJECT_SOURCE_DIR}/Source/Engine/Math
-    ${PROJECT_SOURCE_DIR}/Source/Engine/Core
-    ${PROJECT_SOURCE_DIR}/Source/InvasionCycle
-)
-
-# Link directories
-link_directories(
-    ${DEPS_DIR}/lib
+    ${OPENAL_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/dependencies/glm/glm
 )
 
 # Add source files
 file(GLOB_RECURSE SOURCES 
-    "Source/*.cpp"
-    "Source/*.h"
+    "Source/Engine/*.cpp"
+    "Source/InvasionCycle/*.cpp"
 )
 
 # Create executable
-add_executable(InvasionEngine ${SOURCES})
-
-# Include directories
-target_include_directories(InvasionEngine PRIVATE
-    ${CMAKE_SOURCE_DIR}/Source
-    ${CMAKE_SOURCE_DIR}/Source/Engine
-    ${CMAKE_SOURCE_DIR}/Source/Engine/Math
-    ${CMAKE_SOURCE_DIR}/Source/Engine/Core
-    ${CMAKE_SOURCE_DIR}/Source/InvasionCycle
-    ${OPENGL_INCLUDE_DIR}
-    ${GLFW_INCLUDE_DIRS}
-    ${OPENAL_INCLUDE_DIR}
-    ${GLEW_INCLUDE_DIRS}
-    ${JSONCPP_INCLUDE_DIRS}
-)
+add_executable(${PROJECT_NAME} ${SOURCES})
 
 # Link libraries
-target_link_libraries(InvasionEngine PRIVATE
+target_link_libraries(${PROJECT_NAME}
     ${GLEW_LIBRARIES}
-    ${OPENAL_LIBRARY}
     ${GLFW_LIBRARIES}
-    ${JSONCPP_LIBRARIES}
-    glm::glm
+    ${OPENAL_LIBRARY}
     opengl32
 )
 
 # Copy DLLs to output directory
-add_custom_command(TARGET InvasionEngine POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${DEPS_DIR}/bin
-    $<TARGET_FILE_DIR:InvasionEngine>
-)
+if(WIN32)
+    file(COPY ${GLEW_DLL} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    file(COPY ${GLFW_DLL} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    file(COPY ${OPENAL_DLL} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+endif()
 
 # Copy assets to build directory
 file(COPY ${CMAKE_SOURCE_DIR}/Assets DESTINATION ${CMAKE_BINARY_DIR})
 
 # Set compiler flags
 if(MSVC)
-    target_compile_options(InvasionEngine PRIVATE /W4)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
 else()
-    target_compile_options(InvasionEngine PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 endif() 

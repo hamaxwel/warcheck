@@ -1,83 +1,28 @@
 #pragma once
 
-#include "CoreMinimal.h"
-// #include "GameFramework/GameModeBase.h"
-#include "BaseGameMode.h"
-#include "InvasionCycle.h"
-#include "ICGameMode.generated.h"
+#include "Engine/Core/GameMode.h"
+#include "ICPlayerController.h"
+#include <memory>
 
-class ICGameMode : public BaseGameMode
-{
-    GENERATED_BODY()
+namespace InvasionCycle {
 
+class ICGameMode : public InvasionEngine::GameMode {
 public:
     ICGameMode();
-    virtual ~ICGameMode() override;
-    virtual void BeginPlay() override;
-    virtual void Tick(float DeltaTime) override;
+    virtual ~ICGameMode() = default;
 
-    // Game state management
-    UFUNCTION(BlueprintCallable, Category = "Game")
-    void StartGame();
+    virtual bool Initialize() override;
+    virtual void Update(float deltaTime) override;
+    virtual void Shutdown() override;
 
-    UFUNCTION(BlueprintCallable, Category = "Game")
-    void EndGame();
+    void SpawnPlayer();
+    void SpawnEnemy();
+    void SpawnPickup();
 
-    // Player management
-    UFUNCTION(BlueprintCallable, Category = "Game|Player")
-    void SpawnPlayer(APlayerController* PlayerController, InvasionCycleConstants::EFactionType Faction);
+    void SetPlayerController(std::shared_ptr<ICPlayerController> controller);
 
-    UFUNCTION(BlueprintCallable, Category = "Game|Player")
-    void RespawnPlayer(APlayerController* PlayerController);
+private:
+    std::shared_ptr<ICPlayerController> m_PlayerController;
+};
 
-    // Squad management
-    UFUNCTION(BlueprintCallable, Category = "Game|Squad")
-    void CreateSquad(APlayerController* Leader, const FString& SquadName);
-
-    UFUNCTION(BlueprintCallable, Category = "Game|Squad")
-    void AddToSquad(APlayerController* Member, APlayerController* SquadLeader);
-
-    // Game rules
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game|Rules")
-    float RespawnDelay;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game|Rules")
-    int32 MaxSquadSize;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game|Rules")
-    float RoundTime;
-
-    // Game state
-    UPROPERTY(BlueprintReadOnly, Category = "Game|State")
-    bool bIsGameActive;
-
-    UPROPERTY(BlueprintReadOnly, Category = "Game|State")
-    float RemainingRoundTime;
-
-    UPROPERTY(BlueprintReadOnly, Category = "Game|State")
-    TMap<InvasionCycleConstants::EFactionType, int32> FactionScores;
-
-protected:
-    virtual void BeginDestroy() override;
-
-    // Spawn points
-    UPROPERTY(EditAnywhere, Category = "Game|Spawn")
-    TArray<class ATargetPoint*> HumanSpawnPoints;
-
-    UPROPERTY(EditAnywhere, Category = "Game|Spawn")
-    TArray<class ATargetPoint*> VyrexSpawnPoints;
-
-    // Game state tracking
-    UPROPERTY()
-    TMap<APlayerController*, float> RespawnTimers;
-
-    UPROPERTY()
-    TMap<APlayerController*, APlayerController*> SquadLeaders;
-
-    // Helper functions
-    void InitializeGame();
-    void UpdateGameState(float DeltaTime);
-    void ProcessRespawns(float DeltaTime);
-    ATargetPoint* GetSpawnPoint(InvasionCycleConstants::EFactionType Faction);
-    void UpdateScores();
-}; 
+} // namespace InvasionCycle 

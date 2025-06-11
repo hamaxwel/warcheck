@@ -1,10 +1,16 @@
 #include "Core/ICGameMode.h"
-#include "Kismet/GameplayStatics.h"
 #include "Characters/ICHumanCharacter.h"
 #include "Characters/ICVyrexCharacter.h"
 #include "Tactical/ICTacticalCommandManager.h"
+#include "ICPlayerController.h"
+#include "ICBaseCharacter.h"
+#include <algorithm>
 
-AICGameMode::AICGameMode()
+namespace InvasionCycle {
+
+GameMode::GameMode()
+    : m_IsGameActive(false)
+    , m_RemainingRoundTime(RoundTime)
 {
     PrimaryActorTick.bCanEverTick = true;
 
@@ -12,76 +18,130 @@ AICGameMode::AICGameMode()
     RespawnDelay = 5.0f;
     MaxSquadSize = 8;
     RoundTime = 600.0f; // 10 minutes
-    bIsGameActive = false;
-    RemainingRoundTime = RoundTime;
 
     // Initialize faction scores
-    FactionScores.Add(InvasionCycleConstants::EFactionType::Human, 0);
-    FactionScores.Add(InvasionCycleConstants::EFactionType::Vyrex, 0);
+    m_FactionScores.Add(InvasionCycleConstants::EFactionType::Human, 0);
+    m_FactionScores.Add(InvasionCycleConstants::EFactionType::Vyrex, 0);
 }
 
-void AICGameMode::BeginPlay()
+bool GameMode::Initialize()
 {
-    Super::BeginPlay();
-    InitializeGame();
+    m_IsGameActive = false;
+    m_RemainingRoundTime = RoundTime;
+    m_FactionScores.clear();
+    m_Players.clear();
+    m_ActiveCharacters.clear();
+    return true;
 }
 
-void AICGameMode::Tick(float DeltaTime)
+void GameMode::Update(float deltaTime)
 {
-    Super::Tick(DeltaTime);
+    if (!m_IsGameActive) return;
 
-    if (bIsGameActive)
-    {
-        UpdateGameState(DeltaTime);
-        ProcessRespawns(DeltaTime);
+    m_RemainingRoundTime -= deltaTime;
+    if (m_RemainingRoundTime <= 0.0f) {
+        EndGame();
+        return;
     }
-}
 
-void AICGameMode::StartGame()
-{
-    if (!bIsGameActive)
-    {
-        bIsGameActive = true;
-        RemainingRoundTime = RoundTime;
-        
-        // Reset scores
-        FactionScores[InvasionCycleConstants::EFactionType::Human] = 0;
-        FactionScores[InvasionCycleConstants::EFactionType::Vyrex] = 0;
-
-        // Spawn all players
-        for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-        {
-            APlayerController* PlayerController = It->Get();
-            if (PlayerController)
-            {
-                // Determine faction based on team assignment
-                InvasionCycleConstants::EFactionType Faction = 
-                    (PlayerController->GetTeamNum() == 0) ? 
-                    InvasionCycleConstants::EFactionType::Human : 
-                    InvasionCycleConstants::EFactionType::Vyrex;
-
-                SpawnPlayer(PlayerController, Faction);
-            }
+    // Update all active characters
+    for (auto& character : m_ActiveCharacters) {
+        if (character) {
+            character->Update(deltaTime);
         }
     }
 }
 
-void AICGameMode::EndGame()
+void GameMode::Render()
 {
-    if (bIsGameActive)
-    {
-        bIsGameActive = false;
-        
-        // Determine winner
-        int32 HumanScore = FactionScores[InvasionCycleConstants::EFactionType::Human];
-        int32 VyrexScore = FactionScores[InvasionCycleConstants::EFactionType::Vyrex];
-        
-        // Broadcast game end event
-        // TODO: Implement game end UI and rewards
+    // Render all active characters
+    for (auto& character : m_ActiveCharacters) {
+        if (character) {
+            character->Render();
+        }
     }
 }
 
-void AICGameMode::SpawnPlayer(APlayerController* PlayerController, InvasionCycleConstants::EFactionType Faction)
+void GameMode::Shutdown()
+{
+    m_Players.clear();
+    m_ActiveCharacters.clear();
+    m_FactionScores.clear();
+}
+
+void GameMode::StartGame()
+{
+    m_IsGameActive = true;
+    m_RemainingRoundTime = RoundTime;
+    m_FactionScores.clear();
+}
+
+void GameMode::EndGame()
+{
+    m_IsGameActive = false;
+    // Calculate final scores and determine winner
+}
+
+void GameMode::PauseGame()
+{
+    m_IsGameActive = false;
+}
+
+void GameMode::ResumeGame()
+{
+    m_IsGameActive = true;
+}
+
+void GameMode::AddPlayer(std::shared_ptr<ICPlayerController> player)
+{
+    if (player) {
+        m_Players.push_back(player);
+    }
+}
+
+void GameMode::RemovePlayer(std::shared_ptr<ICPlayerController> player)
+{
+    auto it = std::find(m_Players.begin(), m_Players.end(), player);
+    if (it != m_Players.end()) {
+        m_Players.erase(it);
+    }
+}
+
+void GameMode::SetPlayerFaction(std::shared_ptr<ICPlayerController> player, EFactionType faction)
+{
+    if (player) {
+        player->SetFaction(faction);
+    }
+}
+
+EFactionType GameMode::GetPlayerFaction(std::shared_ptr<ICPlayerController> player) const
+{
+    return player ? player->GetFaction() : EFactionType::None;
+}
+
+int GameMode::GetFactionScore(EFactionType faction) const
+{
+    auto it = m_FactionScores.find(faction);
+    return it != m_FactionScores.end() ? it->second : 0;
+}
+
+void GameMode::AddFactionScore(EFactionType faction, int points)
+{
+    m_FactionScores[faction] += points;
+}
+
+void GameMode::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    if (m_IsGameActive)
+    {
+        Update(DeltaTime);
+        ProcessRespawns(DeltaTime);
+    }
+}
+
+void GameMode::SpawnPlayer(APlayerController* PlayerController, InvasionCycleConstants::EFactionType Faction)
 {
     if (!PlayerController)
         return;
@@ -121,7 +181,7 @@ void AICGameMode::SpawnPlayer(APlayerController* PlayerController, InvasionCycle
     }
 }
 
-void AICGameMode::RespawnPlayer(APlayerController* PlayerController)
+void GameMode::RespawnPlayer(APlayerController* PlayerController)
 {
     if (PlayerController)
     {
@@ -129,7 +189,7 @@ void AICGameMode::RespawnPlayer(APlayerController* PlayerController)
     }
 }
 
-void AICGameMode::CreateSquad(APlayerController* Leader, const FString& SquadName)
+void GameMode::CreateSquad(APlayerController* Leader, const FString& SquadName)
 {
     if (Leader && !SquadLeaders.Contains(Leader))
     {
@@ -162,7 +222,7 @@ void AICGameMode::CreateSquad(APlayerController* Leader, const FString& SquadNam
     }
 }
 
-void AICGameMode::AddToSquad(APlayerController* Member, APlayerController* SquadLeader)
+void GameMode::AddToSquad(APlayerController* Member, APlayerController* SquadLeader)
 {
     if (Member && SquadLeader && SquadLeaders.Contains(SquadLeader))
     {
@@ -181,7 +241,7 @@ void AICGameMode::AddToSquad(APlayerController* Member, APlayerController* Squad
     }
 }
 
-void AICGameMode::InitializeGame()
+void GameMode::InitializeGame()
 {
     // Find all spawn points
     TArray<AActor*> FoundActors;
@@ -205,23 +265,7 @@ void AICGameMode::InitializeGame()
     }
 }
 
-void AICGameMode::UpdateGameState(float DeltaTime)
-{
-    // Update round timer
-    if (RemainingRoundTime > 0.0f)
-    {
-        RemainingRoundTime -= DeltaTime;
-        if (RemainingRoundTime <= 0.0f)
-        {
-            EndGame();
-        }
-    }
-
-    // Update scores
-    UpdateScores();
-}
-
-void AICGameMode::ProcessRespawns(float DeltaTime)
+void GameMode::ProcessRespawns(float DeltaTime)
 {
     TArray<APlayerController*> PlayersToRespawn;
 
@@ -252,7 +296,7 @@ void AICGameMode::ProcessRespawns(float DeltaTime)
     }
 }
 
-ATargetPoint* AICGameMode::GetSpawnPoint(InvasionCycleConstants::EFactionType Faction)
+ATargetPoint* GameMode::GetSpawnPoint(InvasionCycleConstants::EFactionType Faction)
 {
     TArray<ATargetPoint*>& SpawnPoints = 
         (Faction == InvasionCycleConstants::EFactionType::Human) ? 
@@ -268,11 +312,11 @@ ATargetPoint* AICGameMode::GetSpawnPoint(InvasionCycleConstants::EFactionType Fa
     return nullptr;
 }
 
-void AICGameMode::UpdateScores()
+void GameMode::UpdateScores()
 {
     // Reset scores
-    FactionScores[InvasionCycleConstants::EFactionType::Human] = 0;
-    FactionScores[InvasionCycleConstants::EFactionType::Vyrex] = 0;
+    m_FactionScores[InvasionCycleConstants::EFactionType::Human] = 0;
+    m_FactionScores[InvasionCycleConstants::EFactionType::Vyrex] = 0;
 
     // Count living players for each faction
     for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
@@ -283,8 +327,10 @@ void AICGameMode::UpdateScores()
             AICBaseCharacter* Character = Cast<AICBaseCharacter>(PlayerController->GetPawn());
             if (Character && !Character->IsDead())
             {
-                FactionScores[Character->FactionType]++;
+                m_FactionScores[Character->FactionType]++;
             }
         }
     }
-} 
+}
+
+} // namespace InvasionCycle 

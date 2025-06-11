@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <chrono>
 #include "Window.h"
 #include "Renderer.h"
 #include "InputManager.h"
@@ -13,12 +14,20 @@
 
 namespace InvasionEngine {
 
+class Window;
+class InputManager;
+class Renderer;
+class SceneManager;
+class AudioSystem;
+
 class Engine {
 public:
-    static Engine& GetInstance();
+    Engine();
+    ~Engine();
 
     bool Initialize();
     void Shutdown();
+    void Run();
     void Update(float deltaTime);
     void Render();
 
@@ -38,26 +47,23 @@ public:
     float GetFixedDeltaTime() const { return m_FixedDeltaTime; }
 
 private:
-    Engine() = default;
-    ~Engine() = default;
-    Engine(const Engine&) = delete;
-    Engine& operator=(const Engine&) = delete;
+    bool InitializeSystems();
 
     // Subsystems
     std::unique_ptr<Window> m_Window;
-    std::unique_ptr<Renderer> m_Renderer;
     std::unique_ptr<InputManager> m_InputManager;
-    std::unique_ptr<ResourceManager> m_ResourceManager;
+    std::unique_ptr<Renderer> m_Renderer;
     std::unique_ptr<SceneManager> m_SceneManager;
-    std::unique_ptr<PhysicsSystem> m_PhysicsSystem;
     std::unique_ptr<AudioSystem> m_AudioSystem;
 
     // Engine state
     bool m_IsInitialized = false;
+    bool m_IsRunning = false;
     int m_TargetFPS = 60;
     float m_DeltaTime = 0.0f;
     float m_FixedDeltaTime = 1.0f / 60.0f;
     float m_Accumulator = 0.0f;
+    float m_LastFrameTime = 0.0f;
 };
 
 } // namespace InvasionEngine 

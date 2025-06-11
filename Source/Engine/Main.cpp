@@ -1,49 +1,44 @@
-#include "Core/Game.h"
+#include "Engine/Core/GameApplication.h"
+#include "InvasionCycle/Core/Game.h"
 #include <memory>
 
-// Forward declare the game class
-class InvasionCycleGame : public InvasionEngine::Game {
-public:
-    bool Initialize() override {
-        // Set up game settings
-        SetTitle("Invasion Cycle");
-        SetWidth(1280);
-        SetHeight(720);
-        SetVSync(true);
-        SetFullscreen(false);
-
-        // Initialize game systems
-        // TODO: Initialize game-specific systems
-
-        m_IsRunning = true;
-        return true;
+int main(int argc, char* argv[])
+{
+    // Create game application
+    auto app = std::make_unique<InvasionEngine::GameApplication>();
+    if (!app->Initialize("Invasion Cycle", 1280, 720)) {
+        return 1;
     }
 
-    void Shutdown() override {
-        // TODO: Shutdown game-specific systems
+    // Create and initialize game
+    auto game = std::make_shared<InvasionCycle::Game>();
+    if (!game->Initialize()) {
+        return 1;
     }
 
-    void Update(float deltaTime) override {
-        // TODO: Update game state
+    // Set game mode
+    auto gameMode = std::make_shared<InvasionCycle::GameMode>();
+    if (!gameMode->Initialize()) {
+        return 1;
     }
+    game->SetGameMode(gameMode);
 
-    void Render() override {
-        // TODO: Render game
+    // Create player controller
+    auto playerController = std::make_shared<InvasionCycle::ICPlayerController>();
+    if (!playerController->Initialize()) {
+        return 1;
     }
-};
+    game->AddPlayer(playerController);
 
-int main(int argc, char* argv[]) {
-    // Create game instance
-    auto game = std::make_shared<InvasionCycleGame>();
+    // Set game state to playing
+    game->SetGameState(InvasionCycle::EGameState::Playing);
 
-    // Create and run application
-    InvasionEngine::GameApplication app;
-    if (!app.Initialize(game)) {
-        return -1;
-    }
+    // Run game loop
+    app->Run(game);
 
-    app.Run();
-    app.Shutdown();
+    // Cleanup
+    game->Shutdown();
+    app->Shutdown();
 
     return 0;
 } 

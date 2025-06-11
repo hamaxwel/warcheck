@@ -12,6 +12,9 @@ struct Vertex {
     float texcoord[2];
 };
 
+// Forward declaration only if needed
+class MeshComponent;
+
 class MeshComponent : public Component {
 public:
     MeshComponent();

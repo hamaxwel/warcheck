@@ -1,96 +1,84 @@
 #include "Map.h"
 #include <fstream>
-#include <json/json.h>
-#include <iostream>
+#include <sstream>
+#include <string>
 
 namespace InvasionEngine {
 
-Map::Map(const std::string& filename) : m_Filename(filename) {}
+Map::Map() : m_Width(0), m_Height(0) {
+}
 
-void Map::Load() {
-    std::ifstream file(m_Filename);
+Map::~Map() {
+}
+
+bool Map::LoadFromFile(const std::string& filename) {
+    std::ifstream file(filename);
     if (!file.is_open()) {
-        std::cerr << "Failed to open map file: " << m_Filename << std::endl;
-        return;
+        return false;
     }
 
-    Json::Value root;
-    Json::Reader reader;
-    if (!reader.parse(file, root)) {
-        std::cerr << "Failed to parse map file: " << reader.getFormattedErrorMessages() << std::endl;
-        return;
+    // Read map dimensions
+    std::string line;
+    if (std::getline(file, line)) {
+        std::istringstream iss(line);
+        iss >> m_Width >> m_Height;
     }
 
-    // Load objects
-    const Json::Value& objects = root["objects"];
-    for (const auto& obj : objects) {
-        MapObject mapObj;
-        mapObj.position = Vector3(
-            obj["position"][0].asFloat(),
-            obj["position"][1].asFloat(),
-            obj["position"][2].asFloat()
-        );
-        mapObj.rotation = Vector3(
-            obj["rotation"][0].asFloat(),
-            obj["rotation"][1].asFloat(),
-            obj["rotation"][2].asFloat()
-        );
-        mapObj.scale = Vector3(
-            obj["scale"][0].asFloat(),
-            obj["scale"][1].asFloat(),
-            obj["scale"][2].asFloat()
-        );
-        mapObj.model = std::make_shared<Model>(obj["model"].asString());
-        m_Objects.push_back(mapObj);
-    }
-
-    // Load spawn points
-    const Json::Value& spawns = root["spawns"];
-    for (const auto& spawn : spawns) {
-        SpawnPoint spawnPoint;
-        spawnPoint.position = Vector3(
-            spawn["position"][0].asFloat(),
-            spawn["position"][1].asFloat(),
-            spawn["position"][2].asFloat()
-        );
-        spawnPoint.rotation = Vector3(
-            spawn["rotation"][0].asFloat(),
-            spawn["rotation"][1].asFloat(),
-            spawn["rotation"][2].asFloat()
-        );
-        spawnPoint.isPlayerSpawn = spawn["isPlayerSpawn"].asBool();
-        
-        if (spawnPoint.isPlayerSpawn) {
-            m_PlayerSpawn = spawnPoint.position;
-        } else {
-            m_AlienSpawns.push_back(spawnPoint.position);
+    // Read map data
+    m_Tiles.resize(m_Width * m_Height);
+    for (int y = 0; y < m_Height; ++y) {
+        if (std::getline(file, line)) {
+            std::istringstream iss(line);
+            for (int x = 0; x < m_Width; ++x) {
+                int tileType;
+                iss >> tileType;
+                m_Tiles[y * m_Width + x] = static_cast<TileType>(tileType);
+            }
         }
-        
-        m_SpawnPoints.push_back(spawnPoint);
+    }
+
+    return true;
+}
+
+bool Map::SaveToFile(const std::string& filename) const {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        return false;
+    }
+
+    // Write map dimensions
+    file << m_Width << " " << m_Height << "\n";
+
+    // Write map data
+    for (int y = 0; y < m_Height; ++y) {
+        for (int x = 0; x < m_Width; ++x) {
+            file << static_cast<int>(m_Tiles[y * m_Width + x]) << " ";
+        }
+        file << "\n";
+    }
+
+    return true;
+}
+
+void Map::SetTile(int x, int y, TileType type) {
+    if (x >= 0 && x < m_Width && y >= 0 && y < m_Height) {
+        m_Tiles[y * m_Width + x] = type;
     }
 }
 
-void Map::Unload() {
-    m_Objects.clear();
-    m_SpawnPoints.clear();
-    m_AlienSpawns.clear();
-}
-
-void Map::Draw() const {
-    for (const auto& obj : m_Objects) {
-        glPushMatrix();
-        glTranslatef(obj.position.x, obj.position.y, obj.position.z);
-        glRotatef(obj.rotation.x, 1.0f, 0.0f, 0.0f);
-        glRotatef(obj.rotation.y, 0.0f, 1.0f, 0.0f);
-        glRotatef(obj.rotation.z, 0.0f, 0.0f, 1.0f);
-        glScalef(obj.scale.x, obj.scale.y, obj.scale.z);
-        obj.model->Draw();
-        glPopMatrix();
+Map::TileType Map::GetTile(int x, int y) const {
+    if (x >= 0 && x < m_Width && y >= 0 && y < m_Height) {
+        return m_Tiles[y * m_Width + x];
     }
+    return TileType::Wall;
 }
 
-const Vector3& Map::GetPlayerSpawn() const {
-    return m_PlayerSpawn;
+int Map::GetWidth() const {
+    return m_Width;
+}
+
+int Map::GetHeight() const {
+    return m_Height;
 }
 
 } // namespace InvasionEngine 

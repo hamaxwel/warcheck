@@ -1,94 +1,47 @@
 #pragma once
 
-#include "CoreMinimal.h"
-// #include "GameFramework/HUD.h"
-#include "BaseHUD.h"
-#include "Characters/ICBaseCharacter.h"
-#include "Tactical/ICTacticalCommandInterface.h"
-#include "ICTacticalHUD.generated.h"
+#include <string>
+#include <vector>
+#include <memory>
+#include "Core/ICGameMode.h"
 
-USTRUCT(BlueprintType)
-struct FSquadMemberInfo
-{
-    GENERATED_BODY()
-
-    UPROPERTY(BlueprintReadWrite)
-    FString PlayerName;
-
-    UPROPERTY(BlueprintReadWrite)
-    float Health;
-
-    UPROPERTY(BlueprintReadWrite)
-    float Shield;
-
-    UPROPERTY(BlueprintReadWrite)
-    bool bIsLeader;
-
-    UPROPERTY(BlueprintReadWrite)
-    EFactionType FactionType;
-};
-
-class ICTacticalHUD : public BaseHUD
-{
-    GENERATED_BODY()
+class ICTacticalHUD {
 public:
     ICTacticalHUD();
-    virtual ~ICTacticalHUD() override;
-    virtual void BeginPlay() override;
-    virtual void Tick(float DeltaTime) override;
-    virtual void DrawHUD() override;
+    ~ICTacticalHUD();
 
-    UFUNCTION(BlueprintCallable)
-    void UpdateSquadInfo(const TArray<FSquadMemberInfo>& SquadMembers);
+    // UI State
+    bool bIsCommandMenuOpen;
+    bool bIsActionMenuOpen;
+    bool bIsTargetingActive;
+    bool bIsMovementPreviewActive;
+    bool bIsAbilityPreviewActive;
 
-    UFUNCTION(BlueprintCallable)
-    void ShowCommandFeedback(const FVector& Location, ECommandType CommandType);
+    // UI Elements
+    void ShowCommandMenu();
+    void HideCommandMenu();
+    void ShowActionMenu();
+    void HideActionMenu();
 
-    UFUNCTION(BlueprintCallable)
-    void ShowSquadJoinPrompt(APlayerController* SquadLeader);
+    // UI Resources
+    std::string CommandMenuTexture;
+    std::string ActionMenuTexture;
+    std::string TargetingReticleTexture;
+    std::string MovementPreviewTexture;
+    std::string AbilityPreviewTexture;
+    std::string CommandButtonTexture;
+    std::string ActionButtonTexture;
+    std::string TargetButtonTexture;
+    std::string MovementButtonTexture;
+    std::string AbilityButtonTexture;
+    std::string CommandIconTexture;
+    std::string ActionIconTexture;
+    std::string TargetIconTexture;
+    std::string MovementIconTexture;
+    std::string AbilityIconTexture;
 
-protected:
-    virtual void BeginDestroy() override;
-
-    UPROPERTY(EditDefaultsOnly, Category = "UI")
-    TSubclassOf<UUserWidget> TacticalWidgetClass;
-
-    UPROPERTY(EditDefaultsOnly, Category = "UI")
-    TSubclassOf<UUserWidget> SquadJoinWidgetClass;
-
-    UPROPERTY()
-    UUserWidget* TacticalWidget;
-
-    UPROPERTY()
-    UUserWidget* SquadJoinWidget;
-
-    UPROPERTY()
-    TArray<FSquadMemberInfo> CurrentSquadInfo;
-
-    UPROPERTY()
-    TArray<FVector> CommandFeedbackLocations;
-
-    UPROPERTY()
-    TArray<ECommandType> CommandFeedbackTypes;
-
-    UPROPERTY()
-    TArray<float> CommandFeedbackTimers;
-
-    UPROPERTY(EditDefaultsOnly, Category = "UI")
-    float CommandFeedbackDuration;
-
-    UPROPERTY(EditDefaultsOnly, Category = "UI")
-    FLinearColor MoveCommandColor;
-
-    UPROPERTY(EditDefaultsOnly, Category = "UI")
-    FLinearColor AttackCommandColor;
-
-    UPROPERTY(EditDefaultsOnly, Category = "UI")
-    FLinearColor DefendCommandColor;
-
-    UPROPERTY(EditDefaultsOnly, Category = "UI")
-    FLinearColor SpecialCommandColor;
-
-    void DrawCommandFeedback();
-    void UpdateCommandFeedback(float DeltaTime);
+private:
+    void InitializeUI();
+    void UpdateUI();
+    void RenderUI();
 }; 

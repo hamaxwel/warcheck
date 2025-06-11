@@ -1,129 +1,72 @@
 #pragma once
 
-#include "Vector.h"
-#include <array>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 namespace InvasionEngine {
 
-struct Quaternion;  // Forward declaration
+using Matrix4 = glm::mat4;
+using Vector2 = glm::vec2;
+using Vector3 = glm::vec3;
+using Vector4 = glm::vec4;
+using Quaternion = glm::quat;
 
-struct Matrix4x4 {
-    union {
-        std::array<float, 16> elements;
-        float m[4][4];
-    };
+inline Matrix4 CreateTranslationMatrix(const Vector3& translation) {
+    return glm::translate(Matrix4(1.0f), translation);
+}
 
-    Matrix4x4() {
-        elements.fill(0.0f);
-        elements[0] = elements[5] = elements[10] = elements[15] = 1.0f;
-    }
+inline Matrix4 CreateRotationMatrix(const Quaternion& rotation) {
+    return glm::toMat4(rotation);
+}
 
-    static Matrix4x4 Identity() {
-        return Matrix4x4();
-    }
+inline Matrix4 CreateScaleMatrix(const Vector3& scale) {
+    return glm::scale(Matrix4(1.0f), scale);
+}
 
-    static Matrix4x4 Translation(const Vector3& translation) {
-        Matrix4x4 result;
-        result.elements[12] = translation.x;
-        result.elements[13] = translation.y;
-        result.elements[14] = translation.z;
-        return result;
-    }
+inline Matrix4 CreateLookAtMatrix(const Vector3& eye, const Vector3& center, const Vector3& up) {
+    return glm::lookAt(eye, center, up);
+}
 
-    static Matrix4x4 Rotation(const Vector3& axis, float angle) {
-        Matrix4x4 result;
-        float c = std::cos(angle);
-        float s = std::sin(angle);
-        float t = 1.0f - c;
-        float x = axis.x;
-        float y = axis.y;
-        float z = axis.z;
+inline Matrix4 CreatePerspectiveMatrix(float fov, float aspectRatio, float nearPlane, float farPlane) {
+    return glm::perspective(fov, aspectRatio, nearPlane, farPlane);
+}
 
-        result.elements[0] = t * x * x + c;
-        result.elements[1] = t * x * y - z * s;
-        result.elements[2] = t * x * z + y * s;
-        result.elements[4] = t * x * y + z * s;
-        result.elements[5] = t * y * y + c;
-        result.elements[6] = t * y * z - x * s;
-        result.elements[8] = t * x * z - y * s;
-        result.elements[9] = t * y * z + x * s;
-        result.elements[10] = t * z * z + c;
+inline Matrix4 CreateOrthographicMatrix(float left, float right, float bottom, float top, float nearPlane, float farPlane) {
+    return glm::ortho(left, right, bottom, top, nearPlane, farPlane);
+}
 
-        return result;
-    }
+inline Vector3 Normalize(const Vector3& v) {
+    return glm::normalize(v);
+}
 
-    static Matrix4x4 Scale(const Vector3& scale) {
-        Matrix4x4 result;
-        result.elements[0] = scale.x;
-        result.elements[5] = scale.y;
-        result.elements[10] = scale.z;
-        return result;
-    }
+inline float Dot(const Vector3& a, const Vector3& b) {
+    return glm::dot(a, b);
+}
 
-    static Matrix4x4 Perspective(float fov, float aspectRatio, float near, float far) {
-        Matrix4x4 result;
-        float tanHalfFov = std::tan(fov / 2.0f);
-        
-        result.elements[0] = 1.0f / (aspectRatio * tanHalfFov);
-        result.elements[5] = 1.0f / tanHalfFov;
-        result.elements[10] = -(far + near) / (far - near);
-        result.elements[11] = -1.0f;
-        result.elements[14] = -(2.0f * far * near) / (far - near);
-        result.elements[15] = 0.0f;
+inline Vector3 Cross(const Vector3& a, const Vector3& b) {
+    return glm::cross(a, b);
+}
 
-        return result;
-    }
+inline float Length(const Vector3& v) {
+    return glm::length(v);
+}
 
-    static Matrix4x4 LookAt(const Vector3& eye, const Vector3& target, const Vector3& up) {
-        Matrix4x4 result;
-        Vector3 f = (target - eye);
-        f.Normalize();
-        
-        Vector3 s = Vector3::Cross(f, up);
-        s.Normalize();
-        
-        Vector3 u = Vector3::Cross(s, f);
+inline float Distance(const Vector3& a, const Vector3& b) {
+    return glm::distance(a, b);
+}
 
-        result.elements[0] = s.x;
-        result.elements[1] = s.y;
-        result.elements[2] = s.z;
-        result.elements[4] = u.x;
-        result.elements[5] = u.y;
-        result.elements[6] = u.z;
-        result.elements[8] = -f.x;
-        result.elements[9] = -f.y;
-        result.elements[10] = -f.z;
-        result.elements[12] = -Vector3::Dot(s, eye);
-        result.elements[13] = -Vector3::Dot(u, eye);
-        result.elements[14] = Vector3::Dot(f, eye);
+inline Quaternion CreateQuaternionFromEuler(float pitch, float yaw, float roll) {
+    return glm::quat(glm::vec3(pitch, yaw, roll));
+}
 
-        return result;
-    }
+inline Quaternion CreateQuaternionFromAxisAngle(const Vector3& axis, float angle) {
+    return glm::angleAxis(angle, axis);
+}
 
-    static Matrix4x4 FromQuaternion(const Quaternion& q);
-
-    Matrix4x4 operator*(const Matrix4x4& other) const {
-        Matrix4x4 result;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                float sum = 0.0f;
-                for (int k = 0; k < 4; k++) {
-                    sum += elements[i * 4 + k] * other.elements[k * 4 + j];
-                }
-                result.elements[i * 4 + j] = sum;
-            }
-        }
-        return result;
-    }
-
-    Vector4 operator*(const Vector4& v) const {
-        Vector4 result;
-        result.x = elements[0] * v.x + elements[4] * v.y + elements[8] * v.z + elements[12] * v.w;
-        result.y = elements[1] * v.x + elements[5] * v.y + elements[9] * v.z + elements[13] * v.w;
-        result.z = elements[2] * v.x + elements[6] * v.y + elements[10] * v.z + elements[14] * v.w;
-        result.w = elements[3] * v.x + elements[7] * v.y + elements[11] * v.z + elements[15] * v.w;
-        return result;
-    }
-};
+inline Vector3 RotateVector(const Vector3& v, const Quaternion& q) {
+    return glm::rotate(q, v);
+}
 
 } // namespace InvasionEngine 

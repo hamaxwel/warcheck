@@ -1,49 +1,35 @@
 #pragma once
-#include <string>
 #include <vector>
-#include <memory>
-#include "Math/Vector.h"
-#include "Model.h"
+#include <string>
 
 namespace InvasionEngine {
 
-struct MapObject {
-    Vector3 position;
-    Vector3 rotation;
-    Vector3 scale;
-    std::shared_ptr<Model> model;
-};
-
-struct SpawnPoint {
-    Vector3 position;
-    Vector3 rotation;
-    bool isPlayerSpawn;
-};
-
 class Map {
 public:
-    Map(const std::string& filename);
-    ~Map() = default;
+    enum class TileType {
+        Empty,
+        Wall,
+        Floor,
+        Door,
+        Window
+    };
 
-    void Load();
-    void Unload();
-    void Draw() const;
+    Map();
+    ~Map();
 
-    const std::vector<MapObject>& GetObjects() const { return m_Objects; }
-    const std::vector<SpawnPoint>& GetSpawnPoints() const { return m_SpawnPoints; }
-    const Vector3& GetPlayerSpawn() const;
-    const std::vector<Vector3>& GetAlienSpawns() const { return m_AlienSpawns; }
+    bool LoadFromFile(const std::string& filename);
+    bool SaveToFile(const std::string& filename) const;
+
+    void SetTile(int x, int y, TileType type);
+    TileType GetTile(int x, int y) const;
+
+    int GetWidth() const;
+    int GetHeight() const;
 
 private:
-    void LoadObjects();
-    void LoadSpawnPoints();
-    void LoadCollisionData();
-
-    std::string m_Filename;
-    std::vector<MapObject> m_Objects;
-    std::vector<SpawnPoint> m_SpawnPoints;
-    std::vector<Vector3> m_AlienSpawns;
-    Vector3 m_PlayerSpawn;
+    int m_Width;
+    int m_Height;
+    std::vector<TileType> m_Tiles;
 };
 
 } // namespace InvasionEngine 

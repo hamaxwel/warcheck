@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "Entity.h"
 #include "Scene.h"
 #include "../Math/Vector.h"
 #include "../Math/Quaternion.h"
@@ -8,29 +9,22 @@
 
 namespace InvasionEngine {
 
-class Entity;
-class Mesh;
-class Material;
-
 class Component {
 public:
-    Component();
-    virtual ~Component();
+    Component() = default;
+    virtual ~Component() = default;
 
-    // Component lifecycle
-    virtual void OnCreate() {}
-    virtual void OnDestroy() {}
-    virtual void OnEnable() {}
-    virtual void OnDisable() {}
+    // Core functionality
+    virtual void Initialize() {}
     virtual void Update(float deltaTime) {}
-    virtual void FixedUpdate(float fixedDeltaTime) {}
-    virtual void LateUpdate(float deltaTime) {}
+    virtual void Render() {}
+    virtual void Shutdown() {}
 
-    // Entity access
-    Entity* GetOwner() const { return m_Owner; }
-    void SetOwner(Entity* owner) { m_Owner = owner; }
+    // Entity management
+    void SetEntity(std::shared_ptr<Entity> entity) { m_Entity = entity; }
+    std::shared_ptr<Entity> GetEntity() const { return m_Entity; }
 
-    // Component state
+    // Component properties
     bool IsEnabled() const { return m_Enabled; }
     void SetEnabled(bool enabled) { m_Enabled = enabled; }
 
@@ -45,9 +39,13 @@ public:
 
     Scene* GetScene() const;
 
+    void SetOwner(std::shared_ptr<Entity> owner) { m_Owner = owner; }
+    std::shared_ptr<Entity> GetOwner() const { return m_Owner.lock(); }
+
 protected:
-    Entity* m_Owner;
+    std::shared_ptr<Entity> m_Entity;
     bool m_Enabled = true;
+    std::weak_ptr<Entity> m_Owner;
 };
 
 // Common component types

@@ -90,6 +90,12 @@ void SceneManager::LateUpdate(float deltaTime) {
     }
 }
 
+void SceneManager::Render(Renderer* renderer) {
+    if (m_ActiveScene && renderer) {
+        m_ActiveScene->Render(renderer);
+    }
+}
+
 void SceneManager::Reset() {
     Shutdown();
     Initialize();
